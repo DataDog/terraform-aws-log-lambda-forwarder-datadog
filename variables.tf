@@ -126,19 +126,19 @@ variable "dd_fetch_lambda_tags" {
 
 variable "dd_fetch_log_group_tags" {
   type        = bool
-  default     = true
-  description = "Let the forwarder fetch Log Group tags using ListTagsLogGroup and apply them to logs, metrics and traces. If set to true, permission logs:ListTagsLogGroup will be automatically added to the Lambda execution IAM role."
+  default     = false
+  description = "Let the forwarder fetch Log Group tags using ListTagsForResource and apply them to logs, metrics and traces. If set to true, permission logs:ListTagsForResource will be automatically added to the Lambda execution IAM role."
 }
 
 variable "dd_fetch_step_functions_tags" {
   type        = bool
-  default     = true
+  default     = false
   description = "Let the forwarder fetch Step Functions tags using GetResources API calls and apply them to logs, metrics and traces. If set to true, permission tag:GetResources will be automatically added to the Lambda execution IAM role."
 }
 
 variable "dd_fetch_s3_tags" {
   type        = bool
-  default     = true
+  default     = false
   description = "Let the forwarder fetch S3 buckets tags using GetResources API calls and apply them to S3 based logs. If set to true, permission tag:GetResources will be automatically added to the Lambda execution IAM role."
 }
 

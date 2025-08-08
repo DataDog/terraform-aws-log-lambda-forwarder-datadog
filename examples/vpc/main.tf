@@ -218,10 +218,7 @@ module "datadog_forwarder" {
   dd_no_proxy            = var.no_proxy
 
   # Datadog configuration
-  dd_tags                      = var.dd_tags
-  dd_fetch_lambda_tags         = true
-  dd_fetch_log_group_tags      = true
-  dd_fetch_step_functions_tags = true
+  dd_tags = var.dd_tags
 
   # S3 configuration for caching
   dd_store_failed_events = true

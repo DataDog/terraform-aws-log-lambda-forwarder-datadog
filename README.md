@@ -64,9 +64,9 @@ For complete usage examples demonstrating different configuration scenarios, see
 |------|-------------|------|---------|
 | dd_tags | Custom tags for forwarded logs | `string` | `""` |
 | dd_fetch_lambda_tags | Fetch Lambda tags | `bool` | `true` |
-| dd_fetch_log_group_tags | Fetch Log Group tags | `bool` | `true` |
-| dd_fetch_step_functions_tags | Fetch Step Functions tags | `bool` | `true` |
-| dd_fetch_s3_tags | Fetch S3 bucket tags | `bool` | `true` |
+| dd_fetch_log_group_tags | Fetch Log Group tags | `bool` | `false` |
+| dd_fetch_step_functions_tags | Fetch Step Functions tags | `bool` | `false` |
+| dd_fetch_s3_tags | Fetch S3 bucket tags | `bool` | `false` |
 | dd_trace_enabled | Enable trace forwarding | `bool` | `true` |
 | dd_enhanced_metrics | Enable enhanced Lambda metrics | `bool` | `false` |
 

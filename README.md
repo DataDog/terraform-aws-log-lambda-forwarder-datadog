@@ -22,16 +22,14 @@ For complete usage examples demonstrating different configuration scenarios, see
 
 | Name | Version |
 |------|---------|
-| terraform | >= 0.13 |
-| aws | >= 3.0 |
-| null | >= 2.0 |
+| terraform | >= 1.3 |
+| aws | >= 5.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| aws | >= 3.0 |
-| null | >= 2.0 |
+| aws | >= 5.0 |
 
 ## Inputs
 

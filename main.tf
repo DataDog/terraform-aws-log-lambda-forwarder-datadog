@@ -262,7 +262,7 @@ resource "aws_s3_bucket_policy" "forwarder_bucket_policy" {
 
 # Lambda function
 resource "aws_lambda_function" "forwarder" {
-  depends_on = [null_resource.download_forwarder_zip, null_resource.create_temp_zip]
+  depends_on = [terraform_data.download_forwarder_zip, terraform_data.create_temp_zip]
 
   function_name = var.function_name != "DatadogForwarder" ? var.function_name : null
   description   = "Pushes logs, metrics and traces from AWS to Datadog."
@@ -395,10 +395,10 @@ resource "aws_cloudwatch_log_group" "forwarder_log_group" {
 }
 
 # Download Lambda source from GitHub
-resource "null_resource" "download_forwarder_zip" {
+resource "terraform_data" "download_forwarder_zip" {
   count = var.install_as_layer == false ? 1 : 0
 
-  triggers = {
+  triggers_replace = {
     version = local.forwarder_version
   }
 
@@ -408,7 +408,7 @@ resource "null_resource" "download_forwarder_zip" {
 }
 
 # Create empty zip for layer-based installation
-resource "null_resource" "create_temp_zip" {
+resource "terraform_data" "create_temp_zip" {
   count = var.install_as_layer ? 1 : 0
 
   provisioner "local-exec" {

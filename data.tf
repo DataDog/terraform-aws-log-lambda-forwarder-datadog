@@ -23,4 +23,7 @@ locals {
   # Local file paths for ZIP handling
   forwarder_zip_path = "${path.module}/aws-dd-forwarder-${local.forwarder_version}.zip"
   temp_zip_path      = "${path.module}/temp.zip"
+
+  # IAM role ARN - use module output if created, otherwise use provided ARN
+  iam_role_arn = var.existing_iam_role_arn == "" ? module.iam[0].iam_role_arn : var.existing_iam_role_arn
 }

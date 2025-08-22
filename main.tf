@@ -1,154 +1,24 @@
-# IAM Role for the Forwarder Lambda
-resource "aws_iam_role" "forwarder_role" {
-  name = "${var.function_name}Role"
-  path = var.iam_role_path
+# IAM role and policies for the Forwarder Lambda
+module "iam" {
+  count = var.existing_iam_role_arn == "" ? 1 : 0
+  
+  source = "./modules/iam"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-
-
-  permissions_boundary = var.permissions_boundary_arn != "" ? var.permissions_boundary_arn : null
-
-  tags = var.tags
-}
-
-# IAM Role Policy Attachments
-resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
-  role       = aws_iam_role.forwarder_role.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
-  role       = aws_iam_role.forwarder_role.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-}
-
-# IAM Policy for the Forwarder
-resource "aws_iam_role_policy" "forwarder_policy" {
-  name = "ForwarderRolePolicy0"
-  role = aws_iam_role.forwarder_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = flatten([
-      # S3 permissions for forwarder bucket
-      (var.dd_forwarder_existing_bucket_name != "" || local.create_s3_bucket) ? [
-        {
-          Effect = "Allow"
-          Action = [
-            "s3:GetObject",
-            "s3:PutObject",
-            "s3:DeleteObject"
-          ]
-          Resource = local.create_s3_bucket ? "${aws_s3_bucket.forwarder_bucket[0].arn}/*" : "arn:${data.aws_partition.current.partition}:s3:::${var.dd_forwarder_existing_bucket_name}/*"
-        },
-        {
-          Effect   = "Allow"
-          Action   = ["s3:ListBucket"]
-          Resource = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].arn : "arn:${data.aws_partition.current.partition}:s3:::${var.dd_forwarder_existing_bucket_name}"
-          Condition = {
-            StringLike = {
-              "s3:prefix" = [
-                "failed_events/*",
-                "cache/*"
-              ]
-            }
-          }
-        }
-      ] : null,
-
-      # S3 read access for logs
-      [
-        {
-          Effect   = "Allow"
-          Action   = ["s3:GetObject"]
-          Resource = "*"
-        }
-      ],
-
-      # KMS permissions for encrypted S3 buckets
-      [
-        {
-          Effect   = "Allow"
-          Action   = ["kms:Decrypt"]
-          Resource = "*"
-        }
-      ],
-
-      # Secrets Manager permissions
-      var.dd_api_key_ssm_parameter_name == "" ? [
-        {
-          Effect   = "Allow"
-          Action   = ["secretsmanager:GetSecretValue"]
-          Resource = var.dd_api_key_secret_arn == "arn:aws:secretsmanager:REPLACEME" ? aws_secretsmanager_secret.dd_api_key_secret[0].arn : "${var.dd_api_key_secret_arn}*"
-        }
-      ] : [],
-
-      # SSM Parameter Store permissions
-      var.dd_api_key_ssm_parameter_name != "" ? [
-        {
-          Effect = "Allow"
-          Action = [
-            "ssm:GetParameter",
-            "ssm:GetParameters",
-            "ssm:GetParametersByPath"
-          ]
-          Resource = "*"
-        }
-      ] : [],
-
-      # Tag fetching permissions (Lambda and Step Functions)
-      var.dd_fetch_lambda_tags || var.dd_fetch_step_functions_tags ? [
-        {
-          Effect   = "Allow"
-          Action   = ["tag:GetResources"]
-          Resource = "*"
-        }
-      ] : [],
-
-      # Log Group tag permissions
-      var.dd_fetch_log_group_tags ? [
-        {
-          Effect   = "Allow"
-          Action   = ["logs:ListTagsForResource"]
-          Resource = "*"
-        }
-      ] : [],
-
-      # VPC permissions
-      var.dd_use_vpc ? [
-        {
-          Effect = "Allow"
-          Action = [
-            "ec2:CreateNetworkInterface",
-            "ec2:DescribeNetworkInterfaces",
-            "ec2:DeleteNetworkInterface"
-          ]
-          Resource = "*"
-        }
-      ] : [],
-
-      # Additional target Lambda permissions
-      length(var.additional_target_lambda_arns) > 0 ? [
-        {
-          Effect   = "Allow"
-          Action   = ["lambda:InvokeFunction"]
-          Resource = var.additional_target_lambda_arns
-        }
-      ] : []
-    ])
-  })
+  function_name                       = var.function_name
+  iam_role_path                      = var.iam_role_path
+  permissions_boundary_arn           = var.permissions_boundary_arn
+  partition                          = data.aws_partition.current.partition
+  tags                               = var.tags
+  s3_bucket_permissions              = var.dd_forwarder_existing_bucket_name != "" || local.create_s3_bucket
+  forwarder_bucket_arn               = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].arn : ""
+  dd_forwarder_existing_bucket_name  = var.dd_forwarder_existing_bucket_name
+  dd_api_key_ssm_parameter_name      = var.dd_api_key_ssm_parameter_name
+  dd_api_key_secret_arn              = var.dd_api_key_secret_arn == "arn:aws:secretsmanager:REPLACEME" ? try(aws_secretsmanager_secret.dd_api_key_secret[0].arn, "") : "${var.dd_api_key_secret_arn}*"
+  dd_fetch_lambda_tags               = var.dd_fetch_lambda_tags
+  dd_fetch_step_functions_tags       = var.dd_fetch_step_functions_tags
+  dd_fetch_log_group_tags            = var.dd_fetch_log_group_tags
+  dd_use_vpc                         = var.dd_use_vpc
+  additional_target_lambda_arns      = var.additional_target_lambda_arns
 }
 
 # Secrets Manager secret for Datadog API key
@@ -266,7 +136,7 @@ resource "aws_lambda_function" "forwarder" {
 
   function_name = var.function_name != "DatadogForwarder" ? var.function_name : null
   description   = "Pushes logs, metrics and traces from AWS to Datadog."
-  role          = aws_iam_role.forwarder_role.arn
+  role          = local.iam_role_arn
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.12"
   architectures = ["arm64"]

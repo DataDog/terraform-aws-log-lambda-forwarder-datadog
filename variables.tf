@@ -31,7 +31,7 @@ variable "dd_api_key_ssm_parameter_name" {
 variable "dd_site" {
   type        = string
   default     = "datadoghq.com"
-  description = "Define your Datadog Site to send data to. Possible values are `datadoghq.com`, `datadoghq.eu`, `us3.datadoghq.com`, `us5.datadoghq.com`, `ap1.datadoghq.com`, `ap2.datadoghq.com` and `ddog-gov.com`."
+  description = "Define your Datadog Site to send data to."
 
   validation {
     condition     = contains(["datadoghq.com", "datadoghq.eu", "us3.datadoghq.com", "us5.datadoghq.com", "ap1.datadoghq.com", "ap2.datadoghq.com", "ddog-gov.com"], var.dd_site)
@@ -61,6 +61,12 @@ variable "timeout" {
   type        = number
   default     = 120
   description = "Timeout for the Datadog Forwarder Lambda function"
+}
+
+variable "existing_iam_role_arn" {
+  type        = string
+  default     = ""
+  description = "ARN of existing IAM role to use for the Lambda function. If not provided, a new IAM role will be created."
 }
 
 variable "tags_cache_ttl_seconds" {

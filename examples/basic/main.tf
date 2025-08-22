@@ -35,8 +35,13 @@ module "datadog_forwarder" {
 
 # Example CloudWatch Log Group to forward
 resource "aws_cloudwatch_log_group" "example" {
-  name              = "/aws/lambda/test-log-group"
+  name              = "/aws/lambda/test-log-group-basic"
   retention_in_days = 14
+}
+
+resource "aws_cloudwatch_log_stream" "example" {
+  name           = "test"
+  log_group_name = aws_cloudwatch_log_group.example.name
 }
 
 # Log subscription filter to forward logs to Datadog

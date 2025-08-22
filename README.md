@@ -116,6 +116,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 |------|-------------|------|---------|
 | iam_role_path | IAM role path | `string` | `"/"` |
 | permissions_boundary_arn | Permissions boundary ARN | `string` | `""` |
+| existing_iam_role_arn | ARN of existing IAM role to use for the Lambda function. If not provided, a new IAM role will be created. | `string` | `""` |
 
 ### Advanced Configuration
 

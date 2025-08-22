@@ -10,12 +10,12 @@ output "datadog_forwarder_function_name" {
 
 output "datadog_forwarder_role_arn" {
   description = "Datadog Forwarder Lambda Function Role ARN"
-  value       = aws_iam_role.forwarder_role.arn
+  value       = local.iam_role_arn
 }
 
 output "datadog_forwarder_role_name" {
   description = "Datadog Forwarder Lambda Function Role Name"
-  value       = aws_iam_role.forwarder_role.name
+  value       = var.existing_iam_role_arn == "" ? module.iam[0].iam_role_name : null
 }
 
 output "dd_api_key_secret_arn" {

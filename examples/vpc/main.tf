@@ -223,3 +223,22 @@ module "datadog_forwarder" {
   # S3 configuration for caching
   dd_store_failed_events = true
 }
+
+# Example CloudWatch Log Group to forward
+resource "aws_cloudwatch_log_group" "example" {
+  name              = "/aws/lambda/test-log-group-vpc"
+  retention_in_days = 14
+}
+
+resource "aws_cloudwatch_log_stream" "example" {
+  name           = "test"
+  log_group_name = aws_cloudwatch_log_group.example.name
+}
+
+# Log subscription filter to forward logs to Datadog
+resource "aws_cloudwatch_log_subscription_filter" "datadog_log_filter" {
+  name            = "datadog-log-filter"
+  log_group_name  = aws_cloudwatch_log_group.example.name
+  filter_pattern  = ""
+  destination_arn = module.datadog_forwarder.datadog_forwarder_arn
+}

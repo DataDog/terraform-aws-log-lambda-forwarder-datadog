@@ -21,26 +21,21 @@ When `create_vpc = true`, this creates:
 
 ## Usage
 
-### Option 1: Create New VPC
+1. Set your variables:
+   ```bash
+   export TF_VAR_datadog_api_key="your-datadog-api-key"
+   ```
 
-```bash
-export TF_VAR_datadog_api_key="your-datadog-api-key"
-terraform init
-terraform plan -var="create_vpc=true"
-terraform apply
-```
+2. Optionally edit `main.tf` if you wish to use an existing VPC
+   and security group.
 
-### Option 2: Use Existing VPC
+3. Initialize and apply:
+   ```bash
+   terraform init
+   terraform plan
+   terraform apply
+   ```
 
-```bash
-export TF_VAR_datadog_api_key="your-datadog-api-key"
-terraform init
-terraform plan \
-  -var="create_vpc=false" \
-  -var="vpc_id=vpc-12345678" \
-  -var="security_group_name=my-existing-sg"
-terraform apply
-```
 
 ## Network Requirements
 

@@ -34,23 +34,6 @@ variable "timeout" {
   default     = 120
 }
 
-variable "create_vpc" {
-  description = "Whether to create a new VPC or use an existing one"
-  type        = bool
-  default     = true
-}
-
-variable "vpc_id" {
-  description = "VPC ID to use (required if create_vpc is false)"
-  type        = string
-  default     = ""
-}
-
-variable "security_group_name" {
-  description = "Name of existing security group to use (required if create_vpc is false)"
-  type        = string
-  default     = ""
-}
 
 variable "proxy_url" {
   description = "HTTP proxy URL (optional)"

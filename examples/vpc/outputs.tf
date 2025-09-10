@@ -10,22 +10,22 @@ output "forwarder_function_name" {
 
 output "vpc_id" {
   description = "VPC ID used by the forwarder"
-  value       = local.vpc_id
+  value       = module.vpc.vpc_id
 }
 
 output "subnet_ids" {
-  description = "Subnet IDs used by the forwarder"
-  value       = local.subnet_ids
+  description = "Private subnet IDs used by the forwarder"
+  value       = module.vpc.private_subnets
 }
 
-output "security_group_ids" {
-  description = "Security Group IDs used by the forwarder"
-  value       = local.security_group_ids
+output "security_group_id" {
+  description = "Security Group ID used by the forwarder"
+  value       = aws_security_group.forwarder.id
 }
 
 output "nat_gateway_ips" {
-  description = "NAT Gateway public IPs (if VPC was created)"
-  value       = var.create_vpc ? aws_eip.nat[*].public_ip : []
+  description = "NAT Gateway public IPs"
+  value       = module.vpc.nat_public_ips
 }
 
 output "forwarder_bucket_name" {

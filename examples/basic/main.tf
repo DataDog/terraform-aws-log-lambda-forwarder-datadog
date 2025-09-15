@@ -33,7 +33,7 @@ module "datadog_forwarder" {
   }
 }
 
-# Example CloudWatch Log Group to forward
+### OPTIONAL - Example CloudWatch Log Group to demonstrate forwarding logs
 resource "aws_cloudwatch_log_group" "example" {
   name              = "/aws/lambda/test-log-group-basic"
   retention_in_days = 14

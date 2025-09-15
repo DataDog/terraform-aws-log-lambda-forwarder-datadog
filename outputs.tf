@@ -25,7 +25,7 @@ output "dd_api_key_secret_arn" {
 
 output "forwarder_bucket_name" {
   description = "Name of the S3 bucket used by the Forwarder"
-  value       = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].id : var.dd_forwarder_existing_bucket_name != "" ? var.dd_forwarder_existing_bucket_name : null
+  value       = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].id : var.dd_forwarder_existing_bucket_name != null ? var.dd_forwarder_existing_bucket_name : null
 }
 
 output "forwarder_bucket_arn" {

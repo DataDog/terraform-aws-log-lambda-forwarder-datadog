@@ -95,7 +95,7 @@ module "datadog_forwarder" {
 
   # Proxy configuration (if using proxy)
   dd_http_proxy_url      = var.proxy_url
-  dd_skip_ssl_validation = var.proxy_url != "" ? true : false
+  dd_skip_ssl_validation = var.proxy_url != null ? true : false
   dd_no_proxy            = var.no_proxy
 
   # Datadog configuration
@@ -105,7 +105,7 @@ module "datadog_forwarder" {
   dd_store_failed_events = true
 }
 
-# Example CloudWatch Log Group to forward
+### OPTIONAL - Example CloudWatch Log Group to demonstrate forwarding logs
 resource "aws_cloudwatch_log_group" "example" {
   name              = "/aws/lambda/test-log-group-vpc"
   retention_in_days = 14

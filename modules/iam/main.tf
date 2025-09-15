@@ -16,7 +16,7 @@ resource "aws_iam_role" "forwarder_role" {
     ]
   })
 
-  permissions_boundary = var.permissions_boundary_arn != "" ? var.permissions_boundary_arn : null
+  permissions_boundary = var.permissions_boundary_arn != null ? var.permissions_boundary_arn : null
 
   tags = var.tags
 }
@@ -49,12 +49,15 @@ resource "aws_iam_role_policy" "forwarder_policy" {
             "s3:PutObject",
             "s3:DeleteObject"
           ]
-          Resource = var.forwarder_bucket_arn != "" ? "${var.forwarder_bucket_arn}/*" : "arn:${var.partition}:s3:::${var.dd_forwarder_existing_bucket_name}/*"
+          Resource = var.forwarder_bucket_arn != null ? "${var.forwarder_bucket_arn}/*" : "arn:${var.partition}:s3:::${var.dd_forwarder_existing_bucket_name}/*"
         },
+      ] : [],
+
+      var.s3_bucket_permissions ? [
         {
           Effect   = "Allow"
           Action   = ["s3:ListBucket"]
-          Resource = var.forwarder_bucket_arn != "" ? var.forwarder_bucket_arn : "arn:${var.partition}:s3:::${var.dd_forwarder_existing_bucket_name}"
+          Resource = var.forwarder_bucket_arn != null ? var.forwarder_bucket_arn : "arn:${var.partition}:s3:::${var.dd_forwarder_existing_bucket_name}"
           Condition = {
             StringLike = {
               "s3:prefix" = [
@@ -64,7 +67,7 @@ resource "aws_iam_role_policy" "forwarder_policy" {
             }
           }
         }
-      ] : null
+      ] : [],
 
       # S3 read access for logs
       [
@@ -85,7 +88,7 @@ resource "aws_iam_role_policy" "forwarder_policy" {
       ],
 
       # Secrets Manager permissions
-      var.dd_api_key_ssm_parameter_name == "" ? [
+      var.dd_api_key_ssm_parameter_name == null && var.dd_api_key_secret_arn != null ? [
         {
           Effect   = "Allow"
           Action   = ["secretsmanager:GetSecretValue"]
@@ -94,7 +97,7 @@ resource "aws_iam_role_policy" "forwarder_policy" {
       ] : [],
 
       # SSM Parameter Store permissions
-      var.dd_api_key_ssm_parameter_name != "" ? [
+      var.dd_api_key_ssm_parameter_name != null ? [
         {
           Effect = "Allow"
           Action = [

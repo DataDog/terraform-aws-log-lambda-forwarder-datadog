@@ -38,17 +38,17 @@ variable "timeout" {
 variable "proxy_url" {
   description = "HTTP proxy URL (optional)"
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "no_proxy" {
   description = "Comma-separated list of domains to exclude from proxy"
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "dd_tags" {
   description = "Tags to apply to forwarded logs"
   type        = string
-  default     = "env:production,deployment:vpc,source:aws"
+  default     = "env:production,deployment:vpc,purpose:example"
 }

@@ -32,3 +32,7 @@ output "forwarder_bucket_name" {
   description = "S3 bucket name used by the forwarder"
   value       = module.datadog_forwarder.forwarder_bucket_name
 }
+output "success_message" {
+  description = "Success message"
+  value       = "Successfully created the Datadog Forwarder Lambda function! To send a test log, run the following command:\n\n aws logs put-log-events --log-group-name /aws/lambda/test-log-group-vpc --log-stream-name test --log-events timestamp=$(date +%s000),message=\"Hello world\""
+}

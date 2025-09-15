@@ -1,29 +1,29 @@
 # IAM role and policies for the Forwarder Lambda
 module "iam" {
-  count = var.existing_iam_role_arn == "" ? 1 : 0
-  
+  count = var.existing_iam_role_arn == null ? 1 : 0
+
   source = "./modules/iam"
 
-  function_name                       = var.function_name
-  iam_role_path                      = var.iam_role_path
-  permissions_boundary_arn           = var.permissions_boundary_arn
-  partition                          = data.aws_partition.current.partition
-  tags                               = var.tags
-  s3_bucket_permissions              = var.dd_forwarder_existing_bucket_name != "" || local.create_s3_bucket
-  forwarder_bucket_arn               = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].arn : ""
-  dd_forwarder_existing_bucket_name  = var.dd_forwarder_existing_bucket_name
-  dd_api_key_ssm_parameter_name      = var.dd_api_key_ssm_parameter_name
-  dd_api_key_secret_arn              = var.dd_api_key_secret_arn == "arn:aws:secretsmanager:REPLACEME" ? try(aws_secretsmanager_secret.dd_api_key_secret[0].arn, "") : "${var.dd_api_key_secret_arn}*"
-  dd_fetch_lambda_tags               = var.dd_fetch_lambda_tags
-  dd_fetch_step_functions_tags       = var.dd_fetch_step_functions_tags
-  dd_fetch_log_group_tags            = var.dd_fetch_log_group_tags
-  dd_use_vpc                         = var.dd_use_vpc
-  additional_target_lambda_arns      = var.additional_target_lambda_arns
+  function_name                     = var.function_name
+  iam_role_path                     = var.iam_role_path
+  permissions_boundary_arn          = var.permissions_boundary_arn
+  partition                         = data.aws_partition.current.partition
+  tags                              = var.tags
+  s3_bucket_permissions             = var.dd_forwarder_existing_bucket_name != null || local.create_s3_bucket
+  forwarder_bucket_arn              = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].arn : null
+  dd_forwarder_existing_bucket_name = var.dd_forwarder_existing_bucket_name
+  dd_api_key_ssm_parameter_name     = var.dd_api_key_ssm_parameter_name
+  dd_api_key_secret_arn             = var.dd_api_key_secret_arn == null ? try(aws_secretsmanager_secret.dd_api_key_secret[0].arn, null) : "${var.dd_api_key_secret_arn}*"
+  dd_fetch_lambda_tags              = var.dd_fetch_lambda_tags == "true"
+  dd_fetch_step_functions_tags      = var.dd_fetch_step_functions_tags == "true"
+  dd_fetch_log_group_tags           = var.dd_fetch_log_group_tags == "true"
+  dd_use_vpc                        = var.dd_use_vpc
+  additional_target_lambda_arns     = var.additional_target_lambda_arns != null ? split(",", var.additional_target_lambda_arns) : []
 }
 
 # Secrets Manager secret for Datadog API key
 resource "aws_secretsmanager_secret" "dd_api_key_secret" {
-  count = var.dd_api_key_secret_arn == "arn:aws:secretsmanager:REPLACEME" && var.dd_api_key_ssm_parameter_name == "" ? 1 : 0
+  count = var.dd_api_key_secret_arn == null && var.dd_api_key_ssm_parameter_name == null ? 1 : 0
 
   name_prefix = "DatadogAPIKey-${var.function_name}"
 
@@ -33,7 +33,7 @@ resource "aws_secretsmanager_secret" "dd_api_key_secret" {
 }
 
 resource "aws_secretsmanager_secret_version" "dd_api_key_secret_version" {
-  count = var.dd_api_key_secret_arn == "arn:aws:secretsmanager:REPLACEME" && var.dd_api_key_ssm_parameter_name == "" ? 1 : 0
+  count = var.dd_api_key_secret_arn == null && var.dd_api_key_ssm_parameter_name == null ? 1 : 0
 
   secret_id     = aws_secretsmanager_secret.dd_api_key_secret[0].id
   secret_string = var.dd_api_key
@@ -43,7 +43,7 @@ resource "aws_secretsmanager_secret_version" "dd_api_key_secret_version" {
 resource "aws_s3_bucket" "forwarder_bucket" {
   count = local.create_s3_bucket ? 1 : 0
 
-  bucket = var.dd_forwarder_bucket_name != "" ? var.dd_forwarder_bucket_name : null
+  bucket = var.dd_forwarder_bucket_name != null ? var.dd_forwarder_bucket_name : null
 
   force_destroy = true
 
@@ -75,7 +75,7 @@ resource "aws_s3_bucket_public_access_block" "forwarder_bucket_pab" {
 }
 
 resource "aws_s3_bucket_logging" "forwarder_bucket_logging" {
-  count = var.dd_forwarder_buckets_access_logs_target != "" ? 1 : 0
+  count = var.dd_forwarder_buckets_access_logs_target != null ? 1 : 0
 
   bucket = aws_s3_bucket.forwarder_bucket[0].id
 
@@ -134,7 +134,7 @@ resource "aws_s3_bucket_policy" "forwarder_bucket_policy" {
 resource "aws_lambda_function" "forwarder" {
   depends_on = [terraform_data.download_forwarder_zip, terraform_data.create_temp_zip]
 
-  function_name = var.function_name != "DatadogForwarder" ? var.function_name : null
+  function_name = var.function_name
   description   = "Pushes logs, metrics and traces from AWS to Datadog."
   role          = local.iam_role_arn
   handler       = "lambda_function.lambda_handler"
@@ -145,7 +145,7 @@ resource "aws_lambda_function" "forwarder" {
 
   # Use layer or local zip file
   layers = var.install_as_layer ? [
-    var.layer_arn != "" ? var.layer_arn : local.default_layer_arn
+    var.layer_arn != null ? var.layer_arn : local.default_layer_arn
   ] : null
 
   # Local zip file when not using layers
@@ -154,7 +154,7 @@ resource "aws_lambda_function" "forwarder" {
   # Ensure Lambda updates when source code changes
   source_code_hash = var.install_as_layer ? null : filebase64sha256(local.forwarder_zip_path)
 
-  reserved_concurrent_executions = var.reserved_concurrency != "" ? tonumber(var.reserved_concurrency) : null
+  reserved_concurrent_executions = var.reserved_concurrency != null ? tonumber(var.reserved_concurrency) : null
 
   dynamic "vpc_config" {
     for_each = var.dd_use_vpc ? [1] : []
@@ -176,46 +176,46 @@ resource "aws_lambda_function" "forwarder" {
         DD_ENHANCED_METRICS       = tostring(var.dd_enhanced_metrics)
       },
       # API key configuration
-      var.dd_api_key_ssm_parameter_name != "" ? {
+      var.dd_api_key_ssm_parameter_name != null ? {
         DD_API_KEY_SSM_NAME = var.dd_api_key_ssm_parameter_name
         } : {
-        DD_API_KEY_SECRET_ARN = var.dd_api_key_secret_arn == "arn:aws:secretsmanager:REPLACEME" ? aws_secretsmanager_secret.dd_api_key_secret[0].arn : var.dd_api_key_secret_arn
+        DD_API_KEY_SECRET_ARN = var.dd_api_key_secret_arn == null ? aws_secretsmanager_secret.dd_api_key_secret[0].arn : var.dd_api_key_secret_arn
       },
       # S3 bucket name
-      local.create_s3_bucket || var.dd_forwarder_existing_bucket_name != "" ? {
+      local.create_s3_bucket || var.dd_forwarder_existing_bucket_name != null ? {
         DD_S3_BUCKET_NAME = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].id : var.dd_forwarder_existing_bucket_name
       } : {},
       # Optional environment variables
-      var.dd_tags != "" ? { DD_TAGS = var.dd_tags } : {},
-      var.dd_fetch_lambda_tags ? { DD_FETCH_LAMBDA_TAGS = tostring(var.dd_fetch_lambda_tags) } : {},
-      var.dd_fetch_log_group_tags ? { DD_FETCH_LOG_GROUP_TAGS = tostring(var.dd_fetch_log_group_tags) } : {},
-      var.dd_fetch_step_functions_tags ? { DD_FETCH_STEP_FUNCTIONS_TAGS = tostring(var.dd_fetch_step_functions_tags) } : {},
-      var.dd_no_ssl ? { DD_NO_SSL = tostring(var.dd_no_ssl) } : {},
-      var.dd_url != "" ? { DD_URL = var.dd_url } : {},
-      var.dd_port != "" ? { DD_PORT = var.dd_port } : {},
-      var.dd_store_failed_events && (local.create_s3_bucket || var.dd_forwarder_existing_bucket_name != "") ? { DD_STORE_FAILED_EVENTS = tostring(var.dd_store_failed_events) } : {},
-      var.redact_ip ? { REDACT_IP = tostring(var.redact_ip) } : {},
-      var.redact_email ? { REDACT_EMAIL = tostring(var.redact_email) } : {},
-      var.dd_scrubbing_rule != "" ? { DD_SCRUBBING_RULE = var.dd_scrubbing_rule } : {},
-      var.dd_scrubbing_rule_replacement != "" ? { DD_SCRUBBING_RULE_REPLACEMENT = var.dd_scrubbing_rule_replacement } : {},
-      var.exclude_at_match != "" ? { EXCLUDE_AT_MATCH = var.exclude_at_match } : {},
-      var.include_at_match != "" ? { INCLUDE_AT_MATCH = var.include_at_match } : {},
-      var.dd_multiline_log_regex_pattern != "" ? { DD_MULTILINE_LOG_REGEX_PATTERN = var.dd_multiline_log_regex_pattern } : {},
-      var.dd_skip_ssl_validation ? { DD_SKIP_SSL_VALIDATION = tostring(var.dd_skip_ssl_validation) } : {},
-      var.dd_forward_log == false ? { DD_FORWARD_LOG = tostring(var.dd_forward_log) } : {},
-      var.dd_step_functions_trace_enabled ? { DD_STEP_FUNCTIONS_TRACE_ENABLED = tostring(var.dd_step_functions_trace_enabled) } : {},
-      var.dd_use_compression == false ? { DD_USE_COMPRESSION = tostring(var.dd_use_compression) } : {},
-      var.dd_compression_level != 6 ? { DD_COMPRESSION_LEVEL = tostring(var.dd_compression_level) } : {},
-      var.dd_max_workers != 20 ? { DD_MAX_WORKERS = tostring(var.dd_max_workers) } : {},
-      var.dd_http_proxy_url != "" ? {
-        HTTP_PROXY  = var.dd_http_proxy_url
-        HTTPS_PROXY = var.dd_http_proxy_url
-      } : {},
-      var.dd_no_proxy != "" ? { NO_PROXY = var.dd_no_proxy } : {},
-      length(var.additional_target_lambda_arns) > 0 ? { DD_ADDITIONAL_TARGET_LAMBDAS = join(",", var.additional_target_lambda_arns) } : {},
-      var.dd_api_url != "" ? { DD_API_URL = var.dd_api_url } : {},
-      var.dd_trace_intake_url != "" ? { DD_TRACE_INTAKE_URL = var.dd_trace_intake_url } : {},
-      var.dd_log_level != "" ? { DD_LOG_LEVEL = var.dd_log_level } : {}
+      {
+        DD_TAGS                         = var.dd_tags
+        DD_FETCH_LAMBDA_TAGS            = var.dd_fetch_lambda_tags
+        DD_FETCH_LOG_GROUP_TAGS         = var.dd_fetch_log_group_tags
+        DD_FETCH_STEP_FUNCTIONS_TAGS    = var.dd_fetch_step_functions_tags
+        DD_NO_SSL                       = var.dd_no_ssl
+        DD_URL                          = var.dd_url
+        DD_PORT                         = var.dd_port
+        DD_STORE_FAILED_EVENTS          = var.dd_store_failed_events != null && var.dd_store_failed_events == "true" && (local.create_s3_bucket || var.dd_forwarder_existing_bucket_name != null) ? var.dd_store_failed_events : null
+        REDACT_IP                       = var.redact_ip
+        REDACT_EMAIL                    = var.redact_email
+        DD_SCRUBBING_RULE               = var.dd_scrubbing_rule
+        DD_SCRUBBING_RULE_REPLACEMENT   = var.dd_scrubbing_rule_replacement
+        EXCLUDE_AT_MATCH                = var.exclude_at_match
+        INCLUDE_AT_MATCH                = var.include_at_match
+        DD_MULTILINE_LOG_REGEX_PATTERN  = var.dd_multiline_log_regex_pattern
+        DD_SKIP_SSL_VALIDATION          = var.dd_skip_ssl_validation
+        DD_FORWARD_LOG                  = var.dd_forward_log
+        DD_STEP_FUNCTIONS_TRACE_ENABLED = var.dd_step_functions_trace_enabled
+        DD_USE_COMPRESSION              = var.dd_use_compression
+        DD_COMPRESSION_LEVEL            = var.dd_compression_level
+        DD_MAX_WORKERS                  = var.dd_max_workers
+        HTTP_PROXY                      = var.dd_http_proxy_url
+        HTTPS_PROXY                     = var.dd_http_proxy_url
+        NO_PROXY                        = var.dd_no_proxy
+        DD_ADDITIONAL_TARGET_LAMBDAS    = var.additional_target_lambda_arns
+        DD_API_URL                      = var.dd_api_url
+        DD_TRACE_INTAKE_URL             = var.dd_trace_intake_url
+        DD_LOG_LEVEL                    = var.dd_log_level
+      }
     )
   }
 
@@ -282,6 +282,6 @@ resource "terraform_data" "create_temp_zip" {
   count = var.install_as_layer ? 1 : 0
 
   provisioner "local-exec" {
-    command = "echo ' ' | zip -q ${local.temp_zip_path} -"
+    command = "echo 'print(\"empty\")' | zip -q ${local.temp_zip_path} -"
   }
 }

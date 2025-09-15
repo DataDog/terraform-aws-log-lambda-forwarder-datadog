@@ -10,7 +10,7 @@ variable "iam_role_path" {
 
 variable "permissions_boundary_arn" {
   type        = string
-  default     = ""
+  default     = null
   description = "Permissions boundary ARN for the IAM role"
 }
 
@@ -33,25 +33,25 @@ variable "s3_bucket_permissions" {
 
 variable "forwarder_bucket_arn" {
   type        = string
-  default     = ""
+  default     = null
   description = "ARN of the forwarder S3 bucket"
 }
 
 variable "dd_forwarder_existing_bucket_name" {
   type        = string
-  default     = ""
+  default     = null
   description = "Name of existing S3 bucket for forwarder"
 }
 
 variable "dd_api_key_ssm_parameter_name" {
   type        = string
-  default     = ""
+  default     = null
   description = "SSM parameter name for Datadog API key"
 }
 
 variable "dd_api_key_secret_arn" {
   type        = string
-  default     = ""
+  default     = null
   description = "ARN of the secret storing the Datadog API key"
 }
 

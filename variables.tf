@@ -95,8 +95,8 @@ variable "log_retention_in_days" {
 
 variable "layer_version" {
   type        = string
-  default     = "87"
-  description = "Version of the Datadog Forwarder Lambda layer"
+  default     = "latest"
+  description = "Version of the Datadog Forwarder Lambda layer. Use 'latest' to automatically fetch the latest version from GitHub releases or specify a version like '89'."
 }
 
 

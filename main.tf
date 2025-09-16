@@ -132,13 +132,12 @@ resource "aws_s3_bucket_policy" "forwarder_bucket_policy" {
 
 # Lambda function
 resource "aws_lambda_function" "forwarder" {
-  depends_on = [terraform_data.create_temp_zip]
 
   function_name = var.function_name
   description   = "Pushes logs, metrics and traces from AWS to Datadog."
   role          = local.iam_role_arn
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.12"
+  runtime       = "python3.13"
   architectures = ["arm64"]
   memory_size   = var.memory_size
   timeout       = var.timeout
@@ -148,8 +147,8 @@ resource "aws_lambda_function" "forwarder" {
     var.layer_arn != null ? var.layer_arn : local.default_layer_arn
   ]
 
-  # Dummy zip file for layer-based installation
-  filename = local.temp_zip_path
+  # Static placeholder zip file for layer-based installation
+  filename = local.placeholder_zip_path
 
   reserved_concurrent_executions = var.reserved_concurrency != null ? tonumber(var.reserved_concurrency) : null
 
@@ -259,11 +258,4 @@ resource "aws_cloudwatch_log_group" "forwarder_log_group" {
   retention_in_days = var.log_retention_in_days
 
   tags = var.tags
-}
-
-# Create empty zip for layer-based installation
-resource "terraform_data" "create_temp_zip" {
-  provisioner "local-exec" {
-    command = "echo 'print(\"empty\")' | zip -q ${local.temp_zip_path} -"
-  }
 }

@@ -132,7 +132,7 @@ resource "aws_s3_bucket_policy" "forwarder_bucket_policy" {
 
 # Lambda function
 resource "aws_lambda_function" "forwarder" {
-  depends_on = [terraform_data.download_forwarder_zip, terraform_data.create_temp_zip]
+  depends_on = [terraform_data.create_temp_zip]
 
   function_name = var.function_name
   description   = "Pushes logs, metrics and traces from AWS to Datadog."
@@ -143,16 +143,13 @@ resource "aws_lambda_function" "forwarder" {
   memory_size   = var.memory_size
   timeout       = var.timeout
 
-  # Use layer or local zip file
-  layers = var.install_as_layer ? [
+  # Use Lambda layer
+  layers = [
     var.layer_arn != null ? var.layer_arn : local.default_layer_arn
-  ] : null
+  ]
 
-  # Local zip file when not using layers
-  filename = var.install_as_layer ? local.temp_zip_path : local.forwarder_zip_path
-
-  # Ensure Lambda updates when source code changes
-  source_code_hash = var.install_as_layer ? null : filebase64sha256(local.forwarder_zip_path)
+  # Dummy zip file for layer-based installation
+  filename = local.temp_zip_path
 
   reserved_concurrent_executions = var.reserved_concurrency != null ? tonumber(var.reserved_concurrency) : null
 
@@ -264,23 +261,8 @@ resource "aws_cloudwatch_log_group" "forwarder_log_group" {
   tags = var.tags
 }
 
-# Download Lambda source from GitHub
-resource "terraform_data" "download_forwarder_zip" {
-  count = var.install_as_layer == false ? 1 : 0
-
-  triggers_replace = {
-    version = local.forwarder_version
-  }
-
-  provisioner "local-exec" {
-    command = "curl -L -o ${local.forwarder_zip_path} ${local.source_zip_url}"
-  }
-}
-
 # Create empty zip for layer-based installation
 resource "terraform_data" "create_temp_zip" {
-  count = var.install_as_layer ? 1 : 0
-
   provisioner "local-exec" {
     command = "echo 'print(\"empty\")' | zip -q ${local.temp_zip_path} -"
   }

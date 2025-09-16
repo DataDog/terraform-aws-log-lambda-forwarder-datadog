@@ -16,7 +16,6 @@ variables {
   dd_trace_enabled             = false
   memory_size                  = 2048
   timeout                      = 300
-  install_as_layer             = true
   layer_version                = "80"
 }
 

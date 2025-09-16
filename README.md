@@ -53,9 +53,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 | timeout | Timeout in seconds | `number` | `120` |
 | reserved_concurrency | Reserved concurrency (empty for unreserved) | `string` | `""` |
 | log_retention_in_days | CloudWatch log retention | `number` | `90` |
-| source_code_version | Forwarder source code version | `string` | `"4.12.0"` |
 | layer_version | Version of the Datadog Forwarder Lambda layer | `string` | `"87"` |
-| install_as_layer | Use Lambda layer (recommended) | `bool` | `true` |
 | layer_arn | Custom layer ARN (optional) | `string` | `""` |
 
 ### Datadog Configuration
@@ -180,32 +178,6 @@ The forwarder Lambda function is granted the following permissions:
 - **VPC**: Network interface management (if VPC is enabled)
 - **Lambda**: Invoke additional target functions (if configured)
 
-## Migration from CloudFormation
-
-If you're migrating from the CloudFormation template:
-
-1. Note your current CloudFormation stack parameters
-2. Map CloudFormation parameters to Terraform variables (see parameter mapping below)
-3. Import existing resources if needed using `terraform import`
-
-### Parameter Mapping
-
-| CloudFormation Parameter | Terraform Variable |
-|--------------------------|-------------------|
-| `DdApiKey` | `dd_api_key` |
-| `DdApiKeySecretArn` | `dd_api_key_secret_arn` |
-| `DdApiKeySsmParameterName` | `dd_api_key_ssm_parameter_name` |
-| `DdSite` | `dd_site` |
-| `FunctionName` | `function_name` |
-| `MemorySize` | `memory_size` |
-| `Timeout` | `timeout` |
-| `ReservedConcurrency` | `reserved_concurrency` |
-| `InstallAsLayer` | `install_as_layer` |
-| `LayerARN` | `layer_arn` |
-| `DdTags` | `dd_tags` |
-| `VPCSecurityGroupIds` | `vpc_security_group_ids` |
-| `VPCSubnetIds` | `vpc_subnet_ids` |
-
 ## Troubleshooting
 
 ### Common Issues
@@ -224,7 +196,6 @@ Enable debug logging by setting `dd_log_level = "DEBUG"` in your module configur
 Monitor the forwarder using:
 - CloudWatch Logs: `/aws/lambda/{function_name}`
 - CloudWatch Metrics: Lambda function metrics
-- Datadog: Enhanced metrics (if enabled)
 
 ## License
 

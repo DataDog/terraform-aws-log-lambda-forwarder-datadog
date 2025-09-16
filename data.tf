@@ -19,7 +19,7 @@ locals {
   layer_version = var.layer_version == "latest" ? regex("\\(Layer v([0-9]+)\\)", jsondecode(data.http.latest_release[0].response_body).name)[0] : var.layer_version
 
   # Determine if we need to create an S3 bucket for caching and failed events storage
-  create_s3_bucket = ((var.dd_fetch_log_group_tags == "true") || (var.dd_fetch_lambda_tags == "true") || (var.dd_store_failed_events == "true")) && var.dd_forwarder_existing_bucket_name == null
+  create_s3_bucket = (coalesce(var.dd_fetch_log_group_tags, false) || coalesce(var.dd_fetch_lambda_tags, false) || coalesce(var.dd_store_failed_events, false)) && var.dd_forwarder_existing_bucket_name == null
 
   # Default layer ARN based on partition and region
   default_layer_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:${local.dd_account_id}:layer:Datadog-Forwarder:${local.layer_version}"

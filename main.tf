@@ -14,9 +14,9 @@ module "iam" {
   dd_forwarder_existing_bucket_name = var.dd_forwarder_existing_bucket_name
   dd_api_key_ssm_parameter_name     = var.dd_api_key_ssm_parameter_name
   dd_api_key_secret_arn             = var.dd_api_key_secret_arn == null ? try(aws_secretsmanager_secret.dd_api_key_secret[0].arn, null) : "${var.dd_api_key_secret_arn}*"
-  dd_fetch_lambda_tags              = var.dd_fetch_lambda_tags == "true"
-  dd_fetch_step_functions_tags      = var.dd_fetch_step_functions_tags == "true"
-  dd_fetch_log_group_tags           = var.dd_fetch_log_group_tags == "true"
+  dd_fetch_lambda_tags              = var.dd_fetch_lambda_tags
+  dd_fetch_step_functions_tags      = var.dd_fetch_step_functions_tags
+  dd_fetch_log_group_tags           = var.dd_fetch_log_group_tags
   dd_use_vpc                        = var.dd_use_vpc
   additional_target_lambda_arns     = var.additional_target_lambda_arns != null ? split(",", var.additional_target_lambda_arns) : []
 }
@@ -166,10 +166,8 @@ resource "aws_lambda_function" "forwarder" {
       {
         DD_SITE                   = var.dd_site
         DD_TAGS_CACHE_TTL_SECONDS = tostring(var.tags_cache_ttl_seconds)
-        DD_FETCH_S3_TAGS          = tostring(var.dd_fetch_s3_tags)
         DD_USE_VPC                = tostring(var.dd_use_vpc)
         DD_TRACE_ENABLED          = tostring(var.dd_trace_enabled)
-        DD_ENHANCED_METRICS       = tostring(var.dd_enhanced_metrics)
       },
       # API key configuration
       var.dd_api_key_ssm_parameter_name != null ? {
@@ -184,29 +182,29 @@ resource "aws_lambda_function" "forwarder" {
       # Optional environment variables
       {
         DD_TAGS                         = var.dd_tags
-        DD_FETCH_LAMBDA_TAGS            = var.dd_fetch_lambda_tags
-        DD_FETCH_LOG_GROUP_TAGS         = var.dd_fetch_log_group_tags
-        DD_FETCH_STEP_FUNCTIONS_TAGS    = var.dd_fetch_step_functions_tags
+        DD_FETCH_LAMBDA_TAGS            = var.dd_fetch_lambda_tags != null ? tostring(var.dd_fetch_lambda_tags) : null
+        DD_FETCH_LOG_GROUP_TAGS         = var.dd_fetch_log_group_tags != null ? tostring(var.dd_fetch_log_group_tags) : null
+        DD_FETCH_S3_TAGS                = var.dd_fetch_s3_tags != null ? tostring(var.dd_fetch_s3_tags) : null
+        DD_FETCH_STEP_FUNCTIONS_TAGS    = var.dd_fetch_step_functions_tags != null ? tostring(var.dd_fetch_step_functions_tags) : null
         DD_NO_SSL                       = var.dd_no_ssl
         DD_URL                          = var.dd_url
         DD_PORT                         = var.dd_port
-        DD_STORE_FAILED_EVENTS          = var.dd_store_failed_events != null && var.dd_store_failed_events == "true" && (local.create_s3_bucket || var.dd_forwarder_existing_bucket_name != null) ? var.dd_store_failed_events : null
-        REDACT_IP                       = var.redact_ip
-        REDACT_EMAIL                    = var.redact_email
+        DD_STORE_FAILED_EVENTS          = coalesce(var.dd_store_failed_events, false) && (local.create_s3_bucket || var.dd_forwarder_existing_bucket_name != null) ? "true" : null
+        REDACT_IP                       = var.redact_ip != null ? tostring(var.redact_ip) : null
+        REDACT_EMAIL                    = var.redact_email != null ? tostring(var.redact_email) : null
         DD_SCRUBBING_RULE               = var.dd_scrubbing_rule
         DD_SCRUBBING_RULE_REPLACEMENT   = var.dd_scrubbing_rule_replacement
         EXCLUDE_AT_MATCH                = var.exclude_at_match
         INCLUDE_AT_MATCH                = var.include_at_match
         DD_MULTILINE_LOG_REGEX_PATTERN  = var.dd_multiline_log_regex_pattern
-        DD_SKIP_SSL_VALIDATION          = var.dd_skip_ssl_validation
-        DD_FORWARD_LOG                  = var.dd_forward_log
-        DD_STEP_FUNCTIONS_TRACE_ENABLED = var.dd_step_functions_trace_enabled
-        DD_USE_COMPRESSION              = var.dd_use_compression
+        DD_SKIP_SSL_VALIDATION          = var.dd_skip_ssl_validation != null ? tostring(var.dd_skip_ssl_validation) : null
+        DD_FORWARD_LOG                  = var.dd_forward_log != null ? tostring(var.dd_forward_log) : null
+        DD_STEP_FUNCTIONS_TRACE_ENABLED = var.dd_step_functions_trace_enabled != null ? tostring(var.dd_step_functions_trace_enabled) : null
+        DD_USE_COMPRESSION              = var.dd_use_compression != null ? tostring(var.dd_use_compression) : null
         DD_COMPRESSION_LEVEL            = var.dd_compression_level
         DD_MAX_WORKERS                  = var.dd_max_workers
         HTTP_PROXY                      = var.dd_http_proxy_url
         HTTPS_PROXY                     = var.dd_http_proxy_url
-        NO_PROXY                        = var.dd_no_proxy
         DD_ADDITIONAL_TARGET_LAMBDAS    = var.additional_target_lambda_arns
         DD_API_URL                      = var.dd_api_url
         DD_TRACE_INTAKE_URL             = var.dd_trace_intake_url

@@ -6,7 +6,6 @@ provider "aws" {
 variables {
   dd_api_key                   = "test-api-key-value"
   dd_site                      = "datadoghq.com"
-  dd_enhanced_metrics          = true
   dd_fetch_lambda_tags         = true
   dd_fetch_log_group_tags      = true
   dd_fetch_step_functions_tags = true
@@ -45,12 +44,6 @@ run "enhanced_features_env_vars_test" {
   assert {
     condition     = aws_lambda_function.forwarder.layers[0] == "arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Forwarder:80"
     error_message = "Lambda function should use layer version 80"
-  }
-
-  # Test enhanced metrics environment variable
-  assert {
-    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_ENHANCED_METRICS == "true"
-    error_message = "DD_ENHANCED_METRICS should be true when enabled"
   }
 
   # Test tag fetching environment variables

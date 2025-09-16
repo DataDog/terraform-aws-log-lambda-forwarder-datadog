@@ -115,26 +115,26 @@ variable "dd_tags" {
 }
 
 variable "dd_fetch_lambda_tags" {
-  type        = string
+  type        = bool
   default     = null
-  description = "Let the forwarder fetch Lambda tags using GetResources API calls and apply them to logs, metrics and traces. If set to 'true', permission tag:GetResources will be automatically added to the Lambda execution IAM role."
+  description = "Let the forwarder fetch Lambda tags using GetResources API calls and apply them to logs, metrics and traces. If set to true, permission tag:GetResources will be automatically added to the Lambda execution IAM role."
 }
 
 variable "dd_fetch_log_group_tags" {
-  type        = string
+  type        = bool
   default     = null
-  description = "Let the forwarder fetch Log Group tags using ListTagsForResource and apply them to logs, metrics and traces. If set to 'true', permission logs:ListTagsForResource will be automatically added to the Lambda execution IAM role."
+  description = "Let the forwarder fetch Log Group tags using ListTagsForResource and apply them to logs, metrics and traces. If set to true, permission logs:ListTagsForResource will be automatically added to the Lambda execution IAM role."
 }
 
 variable "dd_fetch_step_functions_tags" {
-  type        = string
+  type        = bool
   default     = null
-  description = "Let the forwarder fetch Step Functions tags using GetResources API calls and apply them to logs, metrics and traces. If set to 'true', permission tag:GetResources will be automatically added to the Lambda execution IAM role."
+  description = "Let the forwarder fetch Step Functions tags using GetResources API calls and apply them to logs, metrics and traces. If set to true, permission tag:GetResources will be automatically added to the Lambda execution IAM role."
 }
 
 variable "dd_fetch_s3_tags" {
   type        = bool
-  default     = false
+  default     = null
   description = "Let the forwarder fetch S3 buckets tags using GetResources API calls and apply them to S3 based logs. If set to true, permission tag:GetResources will be automatically added to the Lambda execution IAM role."
 }
 
@@ -158,20 +158,20 @@ variable "dd_port" {
 }
 
 variable "dd_skip_ssl_validation" {
-  type        = string
+  type        = bool
   default     = null
-  description = "Send logs over HTTPS, while NOT validating the certificate provided by the endpoint. This will still encrypt the traffic between the forwarder and the log intake endpoint, but will not verify if the destination SSL certificate is valid. Set to 'true' to skip SSL validation."
+  description = "Send logs over HTTPS, while NOT validating the certificate provided by the endpoint. This will still encrypt the traffic between the forwarder and the log intake endpoint, but will not verify if the destination SSL certificate is valid. Set to true to skip SSL validation."
 }
 
 # Log processing
 variable "redact_ip" {
-  type        = string
+  type        = bool
   default     = null
   description = "Replace text matching \\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3} with xxx.xxx.xxx.xxx. Set to 'true' to enable."
 }
 
 variable "redact_email" {
-  type        = string
+  type        = bool
   default     = null
   description = "Replace text matching [a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+ with xxxxx@xxxxx.com. Set to 'true' to enable."
 }
@@ -207,21 +207,21 @@ variable "dd_multiline_log_regex_pattern" {
 }
 
 variable "dd_forward_log" {
-  type        = string
+  type        = bool
   default     = null
-  description = "Set to 'false' to disable log forwarding, while continuing to forward other observability data, such as metrics and traces from Lambda functions."
+  description = "Set to false to disable log forwarding, while continuing to forward other observability data, such as metrics and traces from Lambda functions."
 }
 
 variable "dd_step_functions_trace_enabled" {
-  type        = string
+  type        = bool
   default     = null
-  description = "Set to 'true' to enable tracing for all Step Functions."
+  description = "Set to true to enable tracing for all Step Functions."
 }
 
 variable "dd_use_compression" {
-  type        = string
+  type        = bool
   default     = null
-  description = "Set to 'false' to disable log compression. Only valid when sending logs over HTTP."
+  description = "Set to false to disable log compression. Only valid when sending logs over HTTP."
 }
 
 # VPC configuration
@@ -235,12 +235,6 @@ variable "dd_http_proxy_url" {
   type        = string
   default     = null
   description = "Sets the standard web proxy environment variables HTTP_PROXY and HTTPS_PROXY. These are the url endpoints your proxy server exposes. Make sure to also set dd_skip_ssl_validation to true."
-}
-
-variable "dd_no_proxy" {
-  type        = string
-  default     = null
-  description = "Sets the standard web proxy environment variable NO_PROXY. It is a comma-separated list of domain names that should be excluded from the web proxy."
 }
 
 variable "vpc_security_group_ids" {
@@ -322,9 +316,9 @@ variable "dd_forwarder_buckets_access_logs_target" {
 }
 
 variable "dd_store_failed_events" {
-  type        = string
+  type        = bool
   default     = null
-  description = "Set to 'true' to enable the forwarder to store events that failed to send to Datadog."
+  description = "Set to true to enable the forwarder to store events that failed to send to Datadog."
 }
 
 variable "dd_forwarder_existing_bucket_name" {
@@ -349,12 +343,6 @@ variable "dd_trace_enabled" {
   type        = bool
   default     = true
   description = "Set to false to disable trace forwarding."
-}
-
-variable "dd_enhanced_metrics" {
-  type        = bool
-  default     = false
-  description = "Set to true to enable enhanced Lambda metrics. This will generate additional custom metrics for Lambda functions, including cold starts, estimated AWS costs, and custom tags. Default is false."
 }
 
 variable "tags" {

@@ -57,19 +57,19 @@ variable "dd_api_key_secret_arn" {
 
 variable "dd_fetch_lambda_tags" {
   type        = bool
-  default     = false
+  default     = null
   description = "Whether to fetch Lambda tags"
 }
 
 variable "dd_fetch_step_functions_tags" {
   type        = bool
-  default     = false
+  default     = null
   description = "Whether to fetch Step Functions tags"
 }
 
 variable "dd_fetch_log_group_tags" {
   type        = bool
-  default     = false
+  default     = null
   description = "Whether to fetch Log Group tags"
 }
 

@@ -118,11 +118,6 @@ run "environment_variables_test" {
   }
 
   assert {
-    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_FETCH_S3_TAGS == "false"
-    error_message = "DD_FETCH_S3_TAGS should be false by default"
-  }
-
-  assert {
     condition     = aws_lambda_function.forwarder.environment[0].variables.DD_USE_VPC == "false"
     error_message = "DD_USE_VPC should be false by default"
   }
@@ -130,11 +125,6 @@ run "environment_variables_test" {
   assert {
     condition     = aws_lambda_function.forwarder.environment[0].variables.DD_TRACE_ENABLED == "true"
     error_message = "DD_TRACE_ENABLED should be true by default"
-  }
-
-  assert {
-    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_ENHANCED_METRICS == "false"
-    error_message = "DD_ENHANCED_METRICS should be false by default"
   }
 
   # Test that optional environment variables are NOT set when null
@@ -146,6 +136,10 @@ run "environment_variables_test" {
   assert {
     condition     = !contains(keys(aws_lambda_function.forwarder.environment[0].variables), "DD_FETCH_LAMBDA_TAGS")
     error_message = "DD_FETCH_LAMBDA_TAGS should not be present when null"
+  }
+  assert {
+    condition     = !contains(keys(aws_lambda_function.forwarder.environment[0].variables), "DD_FETCH_S3_TAGS")
+    error_message = "DD_FETCH_S3_TAGS should not be present when null"
   }
 
   assert {

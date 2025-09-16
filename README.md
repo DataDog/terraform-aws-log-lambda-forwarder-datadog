@@ -51,36 +51,47 @@ For complete usage examples demonstrating different configuration scenarios, see
 | function_name | Lambda function name | `string` | `"DatadogForwarder"` |
 | memory_size | Memory size (128-3008 MB) | `number` | `1024` |
 | timeout | Timeout in seconds | `number` | `120` |
-| reserved_concurrency | Reserved concurrency (empty for unreserved) | `string` | `""` |
+| reserved_concurrency | Reserved concurrency | `string` | `null` |
 | log_retention_in_days | CloudWatch log retention | `number` | `90` |
-| layer_version | Version of the Datadog Forwarder Lambda layer | `string` | `"87"` |
-| layer_arn | Custom layer ARN (optional) | `string` | `""` |
+| layer_version | Version of the Datadog Forwarder Lambda layer | `string` | `"latest"` |
+| layer_arn | Custom layer ARN (optional) | `string` | `null` |
+| existing_iam_role_arn | ARN of existing IAM role | `string` | `null` |
+| tags | Resource tags | `map(string)` | `{}` |
 
 ### Datadog Configuration
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| dd_tags | Custom tags for forwarded logs | `string` | `""` |
-| dd_fetch_lambda_tags | Fetch Lambda tags | `bool` | `true` |
-| dd_fetch_log_group_tags | Fetch Log Group tags | `bool` | `false` |
-| dd_fetch_step_functions_tags | Fetch Step Functions tags | `bool` | `false` |
-| dd_fetch_s3_tags | Fetch S3 bucket tags | `bool` | `false` |
+| dd_api_key | Datadog API key | `string` | `null` |
+| dd_api_key_secret_arn | ARN of secret storing API key | `string` | `null` |
+| dd_api_key_ssm_parameter_name | SSM parameter name for API key | `string` | `null` |
+| dd_site | Datadog site | `string` | `"datadoghq.com"` |
+| dd_tags | Custom tags for forwarded logs | `string` | `null` |
 | dd_trace_enabled | Enable trace forwarding | `bool` | `true` |
-| dd_enhanced_metrics | Enable enhanced Lambda metrics | `bool` | `false` |
+
+### Tag Fetching
+
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| dd_fetch_lambda_tags | Fetch Lambda tags | `bool` | `null` |
+| dd_fetch_log_group_tags | Fetch Log Group tags | `bool` | `null` |
+| dd_fetch_step_functions_tags | Fetch Step Functions tags | `bool` | `null` |
+| dd_fetch_s3_tags | Fetch S3 bucket tags | `bool` | `null` |
 
 ### Log Processing
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| redact_ip | Redact IP addresses | `bool` | `false` |
-| redact_email | Redact email addresses | `bool` | `false` |
-| dd_scrubbing_rule | Regex pattern for log scrubbing | `string` | `""` |
-| dd_scrubbing_rule_replacement | Replacement text for scrubbing | `string` | `""` |
-| exclude_at_match | Regex to exclude logs | `string` | `""` |
-| include_at_match | Regex to include only matching logs | `string` | `""` |
-| dd_multiline_log_regex_pattern | Regex for multiline log detection | `string` | `""` |
-| dd_forward_log | Enable log forwarding | `bool` | `true` |
-| dd_step_functions_trace_enabled | Enable Step Functions tracing | `bool` | `false` |
+| dd_forward_log | Enable log forwarding | `bool` | `null` |
+| dd_step_functions_trace_enabled | Enable Step Functions tracing | `bool` | `null` |
+| dd_use_compression | Enable log compression | `bool` | `null` |
+| redact_ip | Redact IP addresses | `bool` | `null` |
+| redact_email | Redact email addresses | `bool` | `null` |
+| dd_scrubbing_rule | Regex pattern for log scrubbing | `string` | `null` |
+| dd_scrubbing_rule_replacement | Replacement text for scrubbing | `string` | `null` |
+| exclude_at_match | Regex to exclude logs | `string` | `null` |
+| include_at_match | Regex to include only matching logs | `string` | `null` |
+| dd_multiline_log_regex_pattern | Regex for multiline log detection | `string` | `null` |
 
 ### Network Configuration
 
@@ -89,43 +100,41 @@ For complete usage examples demonstrating different configuration scenarios, see
 | dd_use_vpc | Deploy in VPC | `bool` | `false` |
 | vpc_security_group_ids | VPC Security Group IDs | `list(string)` | `[]` |
 | vpc_subnet_ids | VPC Subnet IDs | `list(string)` | `[]` |
-| dd_http_proxy_url | HTTP proxy URL | `string` | `""` |
-| dd_no_proxy | NO_PROXY environment variable | `string` | `""` |
-| dd_no_ssl | Disable SSL | `bool` | `false` |
-| dd_url | Custom endpoint URL | `string` | `""` |
-| dd_port | Custom endpoint port | `string` | `""` |
-| dd_skip_ssl_validation | Skip SSL validation | `bool` | `false` |
-| dd_use_compression | Enable log compression | `bool` | `true` |
-| dd_compression_level | Compression level (0-9) | `number` | `6` |
-| dd_max_workers | Max concurrent workers | `number` | `20` |
+| dd_http_proxy_url | HTTP proxy URL | `string` | `null` |
+| dd_no_ssl | Disable SSL | `string` | `null` |
+| dd_url | Custom endpoint URL | `string` | `null` |
+| dd_port | Custom endpoint port | `string` | `null` |
+| dd_skip_ssl_validation | Skip SSL validation | `bool` | `null` |
 
-### S3 Configuration
+### Advanced Configuration
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| dd_forwarder_bucket_name | S3 bucket name to create | `string` | `""` |
-| dd_forwarder_existing_bucket_name | Existing S3 bucket name to use | `string` | `""` |
-| dd_store_failed_events | Store failed events in S3 | `bool` | `false` |
-| dd_forwarder_buckets_access_logs_target | Access logs target bucket | `string` | `""` |
+| dd_compression_level | Compression level (0-9) | `string` | `null` |
+| dd_max_workers | Max concurrent workers | `string` | `null` |
+| dd_log_level | Log level | `string` | `null` |
+| dd_store_failed_events | Store failed events in S3 | `bool` | `null` |
+| dd_forwarder_bucket_name | Custom S3 bucket name | `string` | `null` |
+| dd_forwarder_existing_bucket_name | Existing S3 bucket name | `string` | `null` |
+| dd_api_url | Custom API URL | `string` | `null` |
+| dd_trace_intake_url | Custom trace intake URL | `string` | `null` |
+| additional_target_lambda_arns | Additional Lambda ARNs to invoke | `string` | `null` |
 
 ### IAM Configuration
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | iam_role_path | IAM role path | `string` | `"/"` |
-| permissions_boundary_arn | Permissions boundary ARN | `string` | `""` |
-| existing_iam_role_arn | ARN of existing IAM role to use for the Lambda function. If not provided, a new IAM role will be created. | `string` | `""` |
-
-### Advanced Configuration
-
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
+| permissions_boundary_arn | Permissions boundary ARN | `string` | `null` |
 | tags_cache_ttl_seconds | Tags cache TTL in seconds | `number` | `300` |
-| additional_target_lambda_arns | Additional Lambda ARNs to invoke | `list(string)` | `[]` |
-| dd_api_url | Custom API endpoint URL | `string` | `""` |
-| dd_trace_intake_url | Custom trace intake URL | `string` | `""` |
-| dd_log_level | Log level (DEBUG, INFO, WARN, ERROR, CRITICAL) | `string` | `"WARN"` |
-| tags | Map of tags to assign to all AWS resources created by this module | `map(string)` | `{}` |
+| dd_forwarder_buckets_access_logs_target | Access logs target bucket | `string` | `null` |
+
+## Boolean Variable Behavior
+
+For boolean variables with `null` defaults, three states are supported:
+- `true` → Sets environment variable to `"true"`
+- `false` → Sets environment variable to `"false"`
+- `null` (unset) → Environment variable not set (uses forwarder defaults)
 
 ## Outputs
 

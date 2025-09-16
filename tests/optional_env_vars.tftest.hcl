@@ -7,9 +7,9 @@ variables {
   dd_api_key                    = "test-api-key-value"
   dd_site                       = "datadoghq.com"
   dd_tags                       = "env:test,service:forwarder"
-  dd_fetch_lambda_tags          = "true"
-  dd_fetch_log_group_tags       = "true"
-  dd_forward_log                = "false"
+  dd_fetch_lambda_tags          = true
+  dd_fetch_log_group_tags       = true
+  dd_forward_log                = false
   dd_log_level                  = "DEBUG"
   dd_compression_level          = "9"
   dd_max_workers                = "10"

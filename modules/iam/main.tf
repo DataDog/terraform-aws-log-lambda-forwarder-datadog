@@ -110,7 +110,7 @@ resource "aws_iam_role_policy" "forwarder_policy" {
       ] : [],
 
       # Tag fetching permissions (Lambda and Step Functions)
-      var.dd_fetch_lambda_tags || var.dd_fetch_step_functions_tags ? [
+      coalesce(var.dd_fetch_lambda_tags, false) || coalesce(var.dd_fetch_step_functions_tags, false) ? [
         {
           Effect   = "Allow"
           Action   = ["tag:GetResources"]
@@ -119,7 +119,7 @@ resource "aws_iam_role_policy" "forwarder_policy" {
       ] : [],
 
       # Log Group tag permissions
-      var.dd_fetch_log_group_tags ? [
+      coalesce(var.dd_fetch_log_group_tags, false) ? [
         {
           Effect   = "Allow"
           Action   = ["logs:ListTagsForResource"]

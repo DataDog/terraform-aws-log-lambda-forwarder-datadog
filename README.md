@@ -100,7 +100,8 @@ For complete usage examples demonstrating different configuration scenarios, see
 | dd_use_vpc | Deploy in VPC | `bool` | `false` |
 | vpc_security_group_ids | VPC Security Group IDs | `list(string)` | `[]` |
 | vpc_subnet_ids | VPC Subnet IDs | `list(string)` | `[]` |
-| dd_http_proxy_url | HTTP proxy URL | `string` | `null` |
+| dd_http_proxy_url | List of url endpoints your proxy server exposes | `string` | `null` |
+| dd_no_proxy | List of domain names that should be excluded from the web proxy | `string` | `null` |
 | dd_no_ssl | Disable SSL | `string` | `null` |
 | dd_url | Custom endpoint URL | `string` | `null` |
 | dd_port | Custom endpoint port | `string` | `null` |

@@ -237,6 +237,12 @@ variable "dd_http_proxy_url" {
   description = "Sets the standard web proxy environment variables HTTP_PROXY and HTTPS_PROXY. These are the url endpoints your proxy server exposes. Make sure to also set dd_skip_ssl_validation to true."
 }
 
+variable "dd_no_proxy" {
+  type        = string
+  default     = null
+  description = "Sets the standard web proxy environment variable NO_PROXY. It is a comma-separated list of domain names that should be excluded from the web proxy."
+}
+
 variable "vpc_security_group_ids" {
   type        = list(string)
   default     = []

@@ -205,6 +205,7 @@ resource "aws_lambda_function" "forwarder" {
         DD_MAX_WORKERS                  = var.dd_max_workers
         HTTP_PROXY                      = var.dd_http_proxy_url
         HTTPS_PROXY                     = var.dd_http_proxy_url
+        NO_PROXY                        = var.dd_no_proxy
         DD_ADDITIONAL_TARGET_LAMBDAS    = var.additional_target_lambda_arns
         DD_API_URL                      = var.dd_api_url
         DD_TRACE_INTAKE_URL             = var.dd_trace_intake_url

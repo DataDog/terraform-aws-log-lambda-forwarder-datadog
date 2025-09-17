@@ -110,7 +110,7 @@ resource "aws_iam_role_policy" "forwarder_policy" {
       ] : [],
 
       # Tag fetching permissions (Lambda and Step Functions)
-      coalesce(var.dd_fetch_lambda_tags, false) || coalesce(var.dd_fetch_step_functions_tags, false) ? [
+      coalesce(var.dd_fetch_lambda_tags, false) || coalesce(var.dd_fetch_step_functions_tags, false) || coalesce(var.dd_fetch_s3_tags, false) ? [
         {
           Effect   = "Allow"
           Action   = ["tag:GetResources"]

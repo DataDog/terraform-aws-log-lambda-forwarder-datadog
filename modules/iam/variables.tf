@@ -66,7 +66,11 @@ variable "dd_fetch_step_functions_tags" {
   default     = null
   description = "Whether to fetch Step Functions tags"
 }
-
+variable "dd_fetch_s3_tags" {
+  type        = bool
+  default     = null
+  description = "Whether to fetch S3 tags"
+}
 variable "dd_fetch_log_group_tags" {
   type        = bool
   default     = null

@@ -17,6 +17,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 
 - **[Basic Example](./examples/basic/)** - Simple setup with minimal configuration, includes examples for API key storage using Secrets Manager or SSM Parameter Store
 - **[VPC Example](./examples/vpc/)** - VPC deployment with enhanced metrics, custom log processing, and comprehensive tagging
+- **[Multi-Region Example](./examples/multi-region/)** - Basic forwarder setup deployed across multiple AWS regions
 
 ## Requirements
 
@@ -189,14 +190,91 @@ The forwarder Lambda function is granted the following permissions:
 - **VPC**: Network interface management (if VPC is enabled)
 - **Lambda**: Invoke additional target functions (if configured)
 
+For multi-region deployments with existing IAM roles, see the [Multi-Region Deployments](#multi-region-deployments) section.
+
+## Multi-Region Deployments
+
+When deploying the forwarder across multiple AWS regions, you have two options:
+
+### Option 1: Let the Module Create Resources (Recommended)
+
+The simplest approach is to let the module create all resources in each region:
+
+```hcl
+# us-east-1 deployment
+module "datadog_forwarder_us_east_1" {
+  source = "path/to/this/module"
+
+  function_name = "DatadogForwarder"
+  dd_api_key    = var.datadog_api_key
+  dd_site       = "datadoghq.com"
+
+  providers = {
+    aws = aws.us_east_1
+  }
+}
+
+# us-west-2 deployment
+module "datadog_forwarder_us_west_2" {
+  source = "path/to/this/module"
+
+  function_name = "DatadogForwarder"
+  dd_api_key    = var.datadog_api_key
+  dd_site       = "datadoghq.com"
+
+  providers = {
+    aws = aws.us_west_2
+  }
+}
+```
+
+The module automatically includes the region in IAM resource names to prevent global resource conflicts.
+
+### Option 2: Bring Your Own IAM Role, S3 Bucket, and Secret reference
+
+For advanced use cases where you want to manage IAM roles centrally, you must provide **all** external resources to avoid cross-region conflicts:
+
+```hcl
+module "datadog_forwarder_us_east_1" {
+  source = "path/to/this/module"
+
+  function_name                      = "DatadogForwarder"
+  existing_iam_role_arn              = "arn:aws:iam::123456789012:role/DatadogForwarderRole"
+  dd_forwarder_existing_bucket_name  = "my-global-datadog-bucket"
+  dd_api_key_secret_arn              = "arn:aws:secretsmanager:us-east-1:123456789012:secret:datadog-api-key-abc123"
+
+  providers = {
+    aws = aws.us_east_1
+  }
+}
+
+module "datadog_forwarder_us_west_2" {
+  source = "path/to/this/module"
+
+  function_name                      = "DatadogForwarder"
+  existing_iam_role_arn              = "arn:aws:iam::123456789012:role/DatadogForwarderRole"
+  dd_forwarder_existing_bucket_name  = "my-global-datadog-bucket"
+  dd_api_key_secret_arn              = "arn:aws:secretsmanager:us-west-2:123456789012:secret:datadog-api-key-def456"
+
+  providers = {
+    aws = aws.us_west_2
+  }
+}
+```
+
+**Requirements when using `existing_iam_role_arn`:**
+- Must specify `dd_forwarder_existing_bucket_name` (S3 bucket accessible from all regions)
+- Must specify either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name`
+- Your IAM role must have appropriate permissions for resources in each target region
+- Secrets/parameters containing the Datadog API key should exist in each target region
+
 ## Troubleshooting
 
 ### Common Issues
 
 1. **Permission Denied Errors**: Ensure the Lambda has the required IAM permissions for your log sources
 2. **VPC Connectivity**: When using VPC, ensure subnets have internet access or VPC endpoints configured
-3. **Layer Not Found**: Verify the layer is available in your AWS region, or provide a custom `layer_arn`
-4. **API Key Issues**: Ensure the API key is valid and is associated with an org within the site specified by dd_site
+3. **API Key Issues**: Ensure the API key is valid and is associated with an org within the site specified by dd_site
 
 ### Debug Mode
 

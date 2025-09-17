@@ -67,6 +67,14 @@ variable "existing_iam_role_arn" {
   type        = string
   default     = null
   description = "ARN of existing IAM role to use for the Lambda function. If not provided, a new IAM role will be created."
+
+  validation {
+    condition = var.existing_iam_role_arn == null || (
+      var.dd_forwarder_existing_bucket_name != null &&
+      (var.dd_api_key_ssm_parameter_name != null || var.dd_api_key_secret_arn != null)
+    )
+    error_message = "When using existing_iam_role_arn, you must also specify dd_forwarder_existing_bucket_name and either dd_api_key_ssm_parameter_name or dd_api_key_secret_arn to avoid cross-region resource conflicts."
+  }
 }
 
 variable "tags_cache_ttl_seconds" {

@@ -18,6 +18,7 @@ module "iam" {
   dd_fetch_lambda_tags              = var.dd_fetch_lambda_tags
   dd_fetch_step_functions_tags      = var.dd_fetch_step_functions_tags
   dd_fetch_log_group_tags           = var.dd_fetch_log_group_tags
+  dd_fetch_s3_tags                  = var.dd_fetch_s3_tags
   dd_use_vpc                        = var.dd_use_vpc
   additional_target_lambda_arns     = var.additional_target_lambda_arns != null ? split(",", var.additional_target_lambda_arns) : []
 }

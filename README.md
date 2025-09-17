@@ -56,7 +56,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 | log_retention_in_days | CloudWatch log retention | `number` | `90` |
 | layer_version | Version of the Datadog Forwarder Lambda layer | `string` | `"latest"` |
 | layer_arn | Custom layer ARN (optional) | `string` | `null` |
-| existing_iam_role_arn | ARN of existing IAM role (user responsible for configuring required permissions) | `string` | `null` |
+| existing_iam_role_arn | ARN of existing IAM role. **Requires** `dd_forwarder_existing_bucket_name` and either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name` to avoid cross-region conflicts. | `string` | `null` |
 | tags | Resource tags | `map(string)` | `{}` |
 
 ### Datadog Configuration
@@ -190,7 +190,7 @@ The forwarder Lambda function is granted the following permissions:
 - **VPC**: Network interface management (if VPC is enabled)
 - **Lambda**: Invoke additional target functions (if configured)
 
-For multi-region deployments with existing IAM roles, see the [Multi-Region Deployments](#multi-region-deployments) section.
+**⚠️ Important**: When using `existing_iam_role_arn`, you must also provide `dd_forwarder_existing_bucket_name` and either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name`. This validation prevents cross-region resource conflicts in multi-region deployments. For details on managing your IAM, S3, and Secret resources externally to the module, see [Option 2](#option-2-bring-your-own-iam-role-s3-bucket-and-secret-reference) below.
 
 ## Multi-Region Deployments
 

@@ -68,6 +68,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 | dd_site | Datadog site | `string` | `"datadoghq.com"` |
 | dd_tags | Custom tags for forwarded logs | `string` | `null` |
 | dd_trace_enabled | Enable trace forwarding | `bool` | `true` |
+| dd_enhanced_metrics | Enable enhanced Lambda metrics | `bool` | `false` |
 
 ### Tag Fetching
 

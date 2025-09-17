@@ -224,6 +224,12 @@ variable "dd_use_compression" {
   description = "Set to false to disable log compression. Only valid when sending logs over HTTP."
 }
 
+variable "dd_enhanced_metrics" {
+  type        = bool
+  default     = false
+  description = "Set to true to enable enhanced Lambda metrics. This will generate additional custom metrics for Lambda functions, including cold starts, estimated AWS costs, and custom tags. Default is false."
+}
+
 # VPC configuration
 variable "dd_use_vpc" {
   type        = bool

@@ -201,6 +201,7 @@ resource "aws_lambda_function" "forwarder" {
         DD_FORWARD_LOG                  = var.dd_forward_log != null ? tostring(var.dd_forward_log) : null
         DD_STEP_FUNCTIONS_TRACE_ENABLED = var.dd_step_functions_trace_enabled != null ? tostring(var.dd_step_functions_trace_enabled) : null
         DD_USE_COMPRESSION              = var.dd_use_compression != null ? tostring(var.dd_use_compression) : null
+        DD_ENHANCED_METRICS             = tostring(var.dd_enhanced_metrics)
         DD_COMPRESSION_LEVEL            = var.dd_compression_level
         DD_MAX_WORKERS                  = var.dd_max_workers
         HTTP_PROXY                      = var.dd_http_proxy_url

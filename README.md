@@ -55,7 +55,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 | log_retention_in_days | CloudWatch log retention | `number` | `90` |
 | layer_version | Version of the Datadog Forwarder Lambda layer | `string` | `"latest"` |
 | layer_arn | Custom layer ARN (optional) | `string` | `null` |
-| existing_iam_role_arn | ARN of existing IAM role | `string` | `null` |
+| existing_iam_role_arn | ARN of existing IAM role (user responsible for configuring required permissions) | `string` | `null` |
 | tags | Resource tags | `map(string)` | `{}` |
 
 ### Datadog Configuration

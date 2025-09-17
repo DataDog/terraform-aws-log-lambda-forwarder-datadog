@@ -253,12 +253,22 @@ variable "vpc_security_group_ids" {
   type        = list(string)
   default     = []
   description = "List of VPC Security Group IDs. Used when dd_use_vpc is enabled."
+
+  validation {
+    condition     = var.dd_use_vpc == false || length(var.vpc_security_group_ids) > 0
+    error_message = "vpc_security_group_ids must be specified when dd_use_vpc is true."
+  }
 }
 
 variable "vpc_subnet_ids" {
   type        = list(string)
   default     = []
   description = "List of VPC Subnet IDs. Used when dd_use_vpc is enabled."
+
+  validation {
+    condition     = var.dd_use_vpc == false || length(var.vpc_subnet_ids) > 0
+    error_message = "vpc_subnet_ids must be specified when dd_use_vpc is true."
+  }
 }
 
 # Advanced configuration

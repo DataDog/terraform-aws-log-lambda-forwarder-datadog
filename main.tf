@@ -8,6 +8,7 @@ module "iam" {
   iam_role_path                     = var.iam_role_path
   permissions_boundary_arn          = var.permissions_boundary_arn
   partition                         = data.aws_partition.current.partition
+  region                            = data.aws_region.current.region
   tags                              = var.tags
   s3_bucket_permissions             = var.dd_forwarder_existing_bucket_name != null || local.create_s3_bucket
   forwarder_bucket_arn              = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].arn : null

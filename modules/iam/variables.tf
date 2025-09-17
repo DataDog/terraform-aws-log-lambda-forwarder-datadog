@@ -84,3 +84,8 @@ variable "additional_target_lambda_arns" {
   default     = []
   description = "List of additional target Lambda ARNs"
 }
+
+variable "region" {
+  type        = string
+  description = "AWS region for resource naming"
+}

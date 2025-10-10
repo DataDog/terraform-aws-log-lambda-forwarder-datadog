@@ -24,7 +24,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 | Name | Version |
 |------|---------|
 | terraform | >= 1.9 |
-| aws | >= 5.0 |
+| aws | >= 6.0 |
 
 ## Providers
 

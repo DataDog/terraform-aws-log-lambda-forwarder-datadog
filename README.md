@@ -45,6 +45,11 @@ For complete usage examples demonstrating different configuration scenarios, see
 - `dd_api_key_secret_arn` - ARN of existing Secrets Manager secret containing the API key
 - `dd_api_key_ssm_parameter_name` - Name of SSM Parameter containing the API key
 
+### AWS Configuration
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| region | AWS region to deploy the Datadog Forwarder to. If empty, the forwarder will be deployed to the region set by the provider. | `string` | `null` |
+
 ### Lambda Configuration
 
 | Name | Description | Type | Default |

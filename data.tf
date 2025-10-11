@@ -32,4 +32,7 @@ locals {
 
   # IAM role ARN - use module output if created, otherwise use provided ARN
   iam_role_arn = var.existing_iam_role_arn == null ? module.iam[0].iam_role_arn : var.existing_iam_role_arn
+
+  # AWS Region
+  region = coalesce(var.region, data.aws_region.current.region)
 }

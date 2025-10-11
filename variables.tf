@@ -380,3 +380,9 @@ variable "tags" {
   default     = {}
   description = "A map of tags to assign to all AWS resources created by this module that support tagging."
 }
+
+variable "region" {
+  type = string
+  description = "AWS region to deploy the Datadog Forwarder to. If empty, the forwarder will be deployed to the region set by the provider."
+  default = null
+}

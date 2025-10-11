@@ -8,7 +8,7 @@ module "iam" {
   iam_role_path                     = var.iam_role_path
   permissions_boundary_arn          = var.permissions_boundary_arn
   partition                         = data.aws_partition.current.partition
-  region                            = data.aws_region.current.region
+  region                            = local.region
   tags                              = var.tags
   s3_bucket_permissions             = var.dd_forwarder_existing_bucket_name != null || local.create_s3_bucket
   forwarder_bucket_arn              = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].arn : null
@@ -27,6 +27,8 @@ module "iam" {
 resource "aws_secretsmanager_secret" "dd_api_key_secret" {
   count = var.dd_api_key_secret_arn == null && var.dd_api_key_ssm_parameter_name == null ? 1 : 0
 
+  region = local.region
+
   name_prefix = "DatadogAPIKey-${var.function_name}"
 
   description = "Datadog API Key"
@@ -37,6 +39,8 @@ resource "aws_secretsmanager_secret" "dd_api_key_secret" {
 resource "aws_secretsmanager_secret_version" "dd_api_key_secret_version" {
   count = var.dd_api_key_secret_arn == null && var.dd_api_key_ssm_parameter_name == null ? 1 : 0
 
+  region = local.region
+
   secret_id     = aws_secretsmanager_secret.dd_api_key_secret[0].id
   secret_string = var.dd_api_key
 }
@@ -44,6 +48,8 @@ resource "aws_secretsmanager_secret_version" "dd_api_key_secret_version" {
 # S3 bucket for the forwarder (if needed)
 resource "aws_s3_bucket" "forwarder_bucket" {
   count = local.create_s3_bucket ? 1 : 0
+
+  region = local.region
 
   bucket = var.dd_forwarder_bucket_name != null ? var.dd_forwarder_bucket_name : null
 
@@ -54,6 +60,8 @@ resource "aws_s3_bucket" "forwarder_bucket" {
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "forwarder_bucket_encryption" {
   count = local.create_s3_bucket ? 1 : 0
+
+  region = local.region
 
   bucket = aws_s3_bucket.forwarder_bucket[0].id
 
@@ -68,6 +76,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "forwarder_bucket_
 resource "aws_s3_bucket_public_access_block" "forwarder_bucket_pab" {
   count = local.create_s3_bucket ? 1 : 0
 
+  region = local.region
+
   bucket = aws_s3_bucket.forwarder_bucket[0].id
 
   block_public_acls       = true
@@ -79,6 +89,8 @@ resource "aws_s3_bucket_public_access_block" "forwarder_bucket_pab" {
 resource "aws_s3_bucket_logging" "forwarder_bucket_logging" {
   count = var.dd_forwarder_buckets_access_logs_target != null ? 1 : 0
 
+  region = local.region
+
   bucket = aws_s3_bucket.forwarder_bucket[0].id
 
   target_bucket = var.dd_forwarder_buckets_access_logs_target
@@ -87,6 +99,8 @@ resource "aws_s3_bucket_logging" "forwarder_bucket_logging" {
 
 resource "aws_s3_bucket_lifecycle_configuration" "forwarder_bucket_lifecycle" {
   count = local.create_s3_bucket ? 1 : 0
+
+  region = local.region
 
   bucket = aws_s3_bucket.forwarder_bucket[0].id
 
@@ -107,6 +121,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "forwarder_bucket_lifecycle" {
 # S3 bucket policy
 resource "aws_s3_bucket_policy" "forwarder_bucket_policy" {
   count = local.create_s3_bucket ? 1 : 0
+
+  region = local.region
 
   bucket = aws_s3_bucket.forwarder_bucket[0].id
 
@@ -134,6 +150,7 @@ resource "aws_s3_bucket_policy" "forwarder_bucket_policy" {
 
 # Lambda function
 resource "aws_lambda_function" "forwarder" {
+  region = local.region
 
   function_name = var.function_name
   description   = "Pushes logs, metrics and traces from AWS to Datadog."
@@ -222,6 +239,8 @@ resource "aws_lambda_function" "forwarder" {
 
 # Lambda permissions
 resource "aws_lambda_permission" "cloudwatch_logs_invoke" {
+  region = local.region
+
   statement_id   = "CloudWatchLogsInvokePermission"
   action         = "lambda:InvokeFunction"
   function_name  = aws_lambda_function.forwarder.function_name
@@ -231,6 +250,8 @@ resource "aws_lambda_permission" "cloudwatch_logs_invoke" {
 }
 
 resource "aws_lambda_permission" "s3_invoke" {
+  region = local.region
+
   statement_id   = "S3Permission"
   action         = "lambda:InvokeFunction"
   function_name  = aws_lambda_function.forwarder.function_name
@@ -239,6 +260,8 @@ resource "aws_lambda_permission" "s3_invoke" {
 }
 
 resource "aws_lambda_permission" "sns_invoke" {
+  region = local.region
+
   statement_id   = "SNSPermission"
   action         = "lambda:InvokeFunction"
   function_name  = aws_lambda_function.forwarder.function_name
@@ -247,6 +270,8 @@ resource "aws_lambda_permission" "sns_invoke" {
 }
 
 resource "aws_lambda_permission" "eventbridge_invoke" {
+  region = local.region
+
   statement_id   = "CloudWatchEventsPermission"
   action         = "lambda:InvokeFunction"
   function_name  = aws_lambda_function.forwarder.function_name
@@ -256,6 +281,8 @@ resource "aws_lambda_permission" "eventbridge_invoke" {
 
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "forwarder_log_group" {
+  region = local.region
+
   name              = "/aws/lambda/${aws_lambda_function.forwarder.function_name}"
   retention_in_days = var.log_retention_in_days
 

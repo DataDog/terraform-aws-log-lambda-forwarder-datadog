@@ -246,7 +246,7 @@ resource "aws_lambda_permission" "cloudwatch_logs_invoke" {
   function_name  = aws_lambda_function.forwarder.function_name
   principal      = data.aws_partition.current.partition == "aws-cn" ? "logs.amazonaws.com.cn" : "logs.amazonaws.com"
   source_account = data.aws_caller_identity.current.account_id
-  source_arn     = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:*:*"
+  source_arn     = "arn:${data.aws_partition.current.partition}:logs:${local.region}:${data.aws_caller_identity.current.account_id}:log-group:*:*"
 }
 
 resource "aws_lambda_permission" "s3_invoke" {

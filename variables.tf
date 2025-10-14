@@ -382,7 +382,7 @@ variable "tags" {
 }
 
 variable "region" {
-  type = string
+  type        = string
   description = "AWS region to deploy the Datadog Forwarder to. If empty, the forwarder will be deployed to the region set by the provider."
-  default = null
+  default     = null
 }

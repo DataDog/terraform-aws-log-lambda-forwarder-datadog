@@ -4,8 +4,8 @@ provider "aws" {
 }
 
 variables {
-  dd_api_key             = "test-api-key-value"
-  dd_site                = "datadoghq.com"
+  dd_api_key = "test-api-key-value"
+  dd_site    = "datadoghq.com"
 }
 
 run "multi_region_us_east_1" {

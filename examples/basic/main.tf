@@ -27,9 +27,8 @@ module "datadog_forwarder" {
 
   # Optional: Custom tags for all AWS resources created by the module
   tags = {
-    environment       = "production"
-    terraform         = "true"
-    dd_forwarder_name = var.function_name
+    environment = "production"
+    terraform   = "true"
   }
 }
 

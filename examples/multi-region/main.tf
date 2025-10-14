@@ -28,9 +28,12 @@ module "datadog_forwarder_us_east_1" {
 
   # Optional: Custom tags for all AWS resources created by the module
   tags = {
-    environment       = "production"
-    terraform         = "true"
-    dd_forwarder_name = var.function_name
+    environment = "production"
+    terraform   = "true"
+  }
+
+  providers = {
+    aws = aws.us_east_1
   }
 }
 
@@ -51,8 +54,11 @@ module "datadog_forwarder_us_east_2" {
 
   # Optional: Custom tags for all AWS resources created by the module
   tags = {
-    environment       = "production"
-    terraform         = "true"
-    dd_forwarder_name = var.function_name
+    environment = "production"
+    terraform   = "true"
+  }
+
+  providers = {
+    aws = aws.us_east_2
   }
 }

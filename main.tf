@@ -201,6 +201,8 @@ resource "aws_lambda_function" "forwarder" {
       # Optional environment variables
       {
         DD_TAGS                         = var.dd_tags
+        DD_ENRICH_S3_TAGS               = var.dd_enrich_s3_tags != null ? tostring(var.dd_enrich_s3_tags) : null
+        DD_ENRICH_CLOUDWATCH_TAGS       = var.dd_enrich_cloudwatch_tags != null ? tostring(var.dd_enrich_cloudwatch_tags) : null
         DD_FETCH_LAMBDA_TAGS            = var.dd_fetch_lambda_tags != null ? tostring(var.dd_fetch_lambda_tags) : null
         DD_FETCH_LOG_GROUP_TAGS         = var.dd_fetch_log_group_tags != null ? tostring(var.dd_fetch_log_group_tags) : null
         DD_FETCH_S3_TAGS                = var.dd_fetch_s3_tags != null ? tostring(var.dd_fetch_s3_tags) : null

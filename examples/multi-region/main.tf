@@ -55,7 +55,4 @@ module "datadog_forwarder_us_east_2" {
     terraform         = "true"
     dd_forwarder_name = var.function_name
   }
-  providers = {
-    aws = aws.us_east_2
-  }
 }

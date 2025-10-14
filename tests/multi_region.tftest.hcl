@@ -1,7 +1,3 @@
-test {
-  parallel = true
-}
-
 # Test multi-region support
 provider "aws" {
   region = "us-east-1"

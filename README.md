@@ -45,6 +45,11 @@ For complete usage examples demonstrating different configuration scenarios, see
 - `dd_api_key_secret_arn` - ARN of existing Secrets Manager secret containing the API key
 - `dd_api_key_ssm_parameter_name` - Name of SSM Parameter containing the API key
 
+### AWS Configuration
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| region | AWS region to deploy the Datadog Forwarder to. If empty, the forwarder will be deployed to the region set by the provider. | `string` | `null` |
+
 ### Lambda Configuration
 
 | Name | Description | Type | Default |
@@ -201,6 +206,10 @@ When deploying the forwarder across multiple AWS regions, you have two options:
 The simplest approach is to let the module create all resources in each region:
 
 ```hcl
+provider "aws" {
+  region = "us-east-1"
+}
+
 # us-east-1 deployment
 module "datadog_forwarder_us_east_1" {
   source = "path/to/this/module"
@@ -208,23 +217,16 @@ module "datadog_forwarder_us_east_1" {
   function_name = "DatadogForwarder"
   dd_api_key    = var.datadog_api_key
   dd_site       = "datadoghq.com"
-
-  providers = {
-    aws = aws.us_east_1
-  }
 }
 
 # us-west-2 deployment
 module "datadog_forwarder_us_west_2" {
   source = "path/to/this/module"
+  region = "us-west-2"
 
   function_name = "DatadogForwarder"
   dd_api_key    = var.datadog_api_key
   dd_site       = "datadoghq.com"
-
-  providers = {
-    aws = aws.us_west_2
-  }
 }
 ```
 
@@ -235,6 +237,10 @@ The module automatically includes the region in IAM resource names to prevent gl
 For advanced use cases where you want to manage IAM roles centrally, you must provide **all** external resources to avoid cross-region conflicts:
 
 ```hcl
+provider "aws" {
+  region = "us-east-1"
+}
+
 module "datadog_forwarder_us_east_1" {
   source = "path/to/this/module"
 
@@ -242,23 +248,16 @@ module "datadog_forwarder_us_east_1" {
   existing_iam_role_arn              = "arn:aws:iam::123456789012:role/DatadogForwarderRole"
   dd_forwarder_existing_bucket_name  = "my-global-datadog-bucket"
   dd_api_key_secret_arn              = "arn:aws:secretsmanager:us-east-1:123456789012:secret:datadog-api-key-abc123"
-
-  providers = {
-    aws = aws.us_east_1
-  }
 }
 
 module "datadog_forwarder_us_west_2" {
   source = "path/to/this/module"
+  region = "us-west-2"
 
   function_name                      = "DatadogForwarder"
   existing_iam_role_arn              = "arn:aws:iam::123456789012:role/DatadogForwarderRole"
   dd_forwarder_existing_bucket_name  = "my-global-datadog-bucket"
   dd_api_key_secret_arn              = "arn:aws:secretsmanager:us-west-2:123456789012:secret:datadog-api-key-def456"
-
-  providers = {
-    aws = aws.us_west_2
-  }
 }
 ```
 

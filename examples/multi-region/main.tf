@@ -10,14 +10,10 @@ terraform {
 }
 
 provider "aws" {
-  alias  = "us_east_1"
   region = "us-east-1"
 }
-provider "aws" {
-  alias  = "us_east_2"
-  region = "us-east-2"
-}
 
+# The region is not specified, so it will default to us-east-1
 module "datadog_forwarder_us_east_1" {
   source = "../../"
 
@@ -36,12 +32,13 @@ module "datadog_forwarder_us_east_1" {
     terraform         = "true"
     dd_forwarder_name = var.function_name
   }
-  providers = {
-    aws = aws.us_east_1
-  }
 }
+
 module "datadog_forwarder_us_east_2" {
   source = "../../"
+
+  # Specify the region
+  region = "us-east-2"
 
   # Required - API key will be stored in Secrets Manager
   # Alternatively, use dd_api_key_secret_arn to reference an existing Secrets Manager secret
@@ -57,8 +54,5 @@ module "datadog_forwarder_us_east_2" {
     environment       = "production"
     terraform         = "true"
     dd_forwarder_name = var.function_name
-  }
-  providers = {
-    aws = aws.us_east_2
   }
 }

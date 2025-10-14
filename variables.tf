@@ -123,12 +123,22 @@ variable "dd_enrich_s3_tags" {
   type        = bool
   default     = null
   description = "Enrich logs with the tags of the S3 bucket that stored them, done after Datadog ingestion. Resource Collection need to be enabled. Available starting v5 of the Forwarder"
+
+  validation {
+    condition     = !coalesce(var.dd_enrich_s3_tags, false) || !coalesce(var.dd_fetch_s3_tags, false)
+    error_message = "S3 Tag enrichment cannot be enabled along side S3 Tag fetch from the forwarder"
+  }
 }
 
 variable "dd_enrich_cloudwatch_tags" {
   type        = bool
   default     = null
   description = "Enrich logs with the tags of the CloudWatch LogGroup that stored them, done after Datadog ingestion. Resource Collection need to be enabled. Available starting v5 of the Forwarder"
+
+  validation {
+    condition     = !coalesce(var.dd_enrich_cloudwatch_tags, false) || !coalesce(var.dd_fetch_log_group_tags, false)
+    error_message = "Cloudwatch Tag enrichment cannot be enabled along side LogGroup Tag fetch from the forwarder"
+  }
 }
 
 variable "dd_fetch_lambda_tags" {

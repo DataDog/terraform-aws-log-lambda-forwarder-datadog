@@ -31,6 +31,10 @@ variables {
   dd_forwarder_existing_bucket_name = "existing-datadog-bucket"
 }
 
+run "default" {
+  command = plan
+}
+
 run "incompatible_s3" {
   command = plan
 

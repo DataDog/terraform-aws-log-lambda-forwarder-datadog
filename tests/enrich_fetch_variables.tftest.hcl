@@ -22,7 +22,6 @@ mock_provider "aws" {
       arn = "arn:aws:s3:::existing-datadog-bucket"
     }
   }
-
 }
 
 variables {

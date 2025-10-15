@@ -31,10 +31,6 @@ module "datadog_forwarder_us_east_1" {
     environment = "production"
     terraform   = "true"
   }
-
-  providers = {
-    aws = aws.us_east_1
-  }
 }
 
 module "datadog_forwarder_us_east_2" {
@@ -56,9 +52,5 @@ module "datadog_forwarder_us_east_2" {
   tags = {
     environment = "production"
     terraform   = "true"
-  }
-
-  providers = {
-    aws = aws.us_east_2
   }
 }

@@ -150,6 +150,8 @@ resource "aws_s3_bucket_policy" "forwarder_bucket_policy" {
 
 # Lambda function
 resource "aws_lambda_function" "forwarder" {
+  region = local.region
+
   function_name = var.function_name
   description   = "Pushes logs, metrics and traces from AWS to Datadog."
   role          = local.iam_role_arn

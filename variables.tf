@@ -122,7 +122,7 @@ variable "dd_tags" {
 variable "dd_enrich_s3_tags" {
   type        = bool
   default     = null
-  description = "Instructs the Datadog backend to automatically enrich logs originating from S3 buckets with the tags associated with those buckets. This approach offers the same tag enrichment as `dd_fetch_s3_tags` but defers the operation after log ingestion, reducing Forwarder overhead. Requires Resource Collection to be enabled in your AWS integration."
+  description = "Instructs the Datadog backend to automatically enrich logs originating from S3 buckets with the tags associated with those buckets. This approach offers the same tag enrichment as `dd_fetch_s3_tags` but defers the operation after log ingestion, reducing Forwarder overhead. Requires Resource Collection to be enabled in your AWS integration. Require Lambda Forwarder v5."
 
   validation {
     condition     = !coalesce(var.dd_enrich_s3_tags, false) || !coalesce(var.dd_fetch_s3_tags, false)
@@ -133,7 +133,7 @@ variable "dd_enrich_s3_tags" {
 variable "dd_enrich_cloudwatch_tags" {
   type        = bool
   default     = null
-  description = "Instructs the Datadog backend to automatically enrich logs originating from CloudWatch LogGroups with the tags associated with those log groups. This approach offers the same tag enrichment as `dd_fetch_log_group_tags` but defers the operation after log ingestion, reducing Forwarder overhead. Requires Resource Collection to be enabled in your AWS integration"
+  description = "Instructs the Datadog backend to automatically enrich logs originating from CloudWatch LogGroups with the tags associated with those log groups. This approach offers the same tag enrichment as `dd_fetch_log_group_tags` but defers the operation after log ingestion, reducing Forwarder overhead. Requires Resource Collection to be enabled in your AWS integration. Require Lambda Forwarder v5."
 
   validation {
     condition     = !coalesce(var.dd_enrich_cloudwatch_tags, false) || !coalesce(var.dd_fetch_log_group_tags, false)

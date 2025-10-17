@@ -21,142 +21,147 @@ For complete usage examples demonstrating different configuration scenarios, see
 
 ## Requirements
 
-| Name | Version |
-|------|---------|
-| terraform | >= 1.9 |
-| aws | >= 6.0 |
+| Name      | Version |
+| --------- | ------- |
+| terraform | >= 1.9  |
+| aws       | >= 6.0  |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| aws | >= 5.0 |
+| ---- | ------- |
+| aws  | >= 5.0  |
 
 ## Inputs
 
 ### Required
 
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
+| Name    | Description                                                                                                                                                                | Type     | Default           |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------- |
 | dd_site | Datadog site to send data to. Options: `datadoghq.com`, `datadoghq.eu`, `us3.datadoghq.com`, `us5.datadoghq.com`, `ap1.datadoghq.com`, `ap2.datadoghq.com`, `ddog-gov.com` | `string` | `"datadoghq.com"` |
 
 **Note**: You must provide **one** of the following for the Datadog API key:
+
 - `dd_api_key` - The API key directly (will be stored in Secrets Manager)
 - `dd_api_key_secret_arn` - ARN of existing Secrets Manager secret containing the API key
 - `dd_api_key_ssm_parameter_name` - Name of SSM Parameter containing the API key
 
 ### AWS Configuration
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
-| region | AWS region to deploy the Datadog Forwarder to. If empty, the forwarder will be deployed to the region set by the provider. | `string` | `null` |
+
+| Name   | Description                                                                                                                | Type     | Default |
+| ------ | -------------------------------------------------------------------------------------------------------------------------- | -------- | ------- |
+| region | AWS region to deploy the Datadog Forwarder to. If empty, the forwarder will be deployed to the region set by the provider. | `string` | `null`  |
 
 ### Lambda Configuration
 
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
-| function_name | Lambda function name | `string` | `"DatadogForwarder"` |
-| memory_size | Memory size (128-3008 MB) | `number` | `1024` |
-| timeout | Timeout in seconds | `number` | `120` |
-| reserved_concurrency | Reserved concurrency | `string` | `null` |
-| log_retention_in_days | CloudWatch log retention | `number` | `90` |
-| layer_version | Version of the Datadog Forwarder Lambda layer | `string` | `"latest"` |
-| layer_arn | Custom layer ARN (optional) | `string` | `null` |
-| existing_iam_role_arn | ARN of existing IAM role. **Requires** `dd_forwarder_existing_bucket_name` and either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name` to avoid cross-region conflicts. | `string` | `null` |
-| tags | Resource tags | `map(string)` | `{}` |
+| Name                  | Description                                                                                                                                                                       | Type          | Default              |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------------- |
+| function_name         | Lambda function name                                                                                                                                                              | `string`      | `"DatadogForwarder"` |
+| memory_size           | Memory size (128-3008 MB)                                                                                                                                                         | `number`      | `1024`               |
+| timeout               | Timeout in seconds                                                                                                                                                                | `number`      | `120`                |
+| reserved_concurrency  | Reserved concurrency                                                                                                                                                              | `string`      | `null`               |
+| log_retention_in_days | CloudWatch log retention                                                                                                                                                          | `number`      | `90`                 |
+| layer_version         | Version of the Datadog Forwarder Lambda layer                                                                                                                                     | `string`      | `"latest"`           |
+| layer_arn             | Custom layer ARN (optional)                                                                                                                                                       | `string`      | `null`               |
+| existing_iam_role_arn | ARN of existing IAM role. **Requires** `dd_forwarder_existing_bucket_name` and either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name` to avoid cross-region conflicts. | `string`      | `null`               |
+| tags                  | Resource tags                                                                                                                                                                     | `map(string)` | `{}`                 |
 
 ### Datadog Configuration
 
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
-| dd_api_key | Datadog API key | `string` | `null` |
-| dd_api_key_secret_arn | ARN of secret storing API key | `string` | `null` |
-| dd_api_key_ssm_parameter_name | SSM parameter name for API key | `string` | `null` |
-| dd_site | Datadog site | `string` | `"datadoghq.com"` |
-| dd_tags | Custom tags for forwarded logs | `string` | `null` |
-| dd_trace_enabled | Enable trace forwarding | `bool` | `true` |
-| dd_enhanced_metrics | Enable enhanced Lambda metrics | `bool` | `false` |
+| Name                          | Description                    | Type     | Default           |
+| ----------------------------- | ------------------------------ | -------- | ----------------- |
+| dd_api_key                    | Datadog API key                | `string` | `null`            |
+| dd_api_key_secret_arn         | ARN of secret storing API key  | `string` | `null`            |
+| dd_api_key_ssm_parameter_name | SSM parameter name for API key | `string` | `null`            |
+| dd_site                       | Datadog site                   | `string` | `"datadoghq.com"` |
+| dd_tags                       | Custom tags for forwarded logs | `string` | `null`            |
+| dd_trace_enabled              | Enable trace forwarding        | `bool`   | `true`            |
+| dd_enhanced_metrics           | Enable enhanced Lambda metrics | `bool`   | `false`           |
 
-### Tag Fetching
+### Tag Enrichment & Fetching
 
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
-| dd_fetch_lambda_tags | Fetch Lambda tags | `bool` | `null` |
-| dd_fetch_log_group_tags | Fetch Log Group tags | `bool` | `null` |
-| dd_fetch_step_functions_tags | Fetch Step Functions tags | `bool` | `null` |
-| dd_fetch_s3_tags | Fetch S3 bucket tags | `bool` | `null` |
+| Name                         | Description                                                                                                                                                   | Type   | Default |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------- |
+| dd_enrich_s3_tags            | Enrich logs from S3 with bucket tags via Datadog backend (requires Resource Collection enabled). Mutually exclusive with `dd_fetch_s3_tags`                   | `bool` | `null`  |
+| dd_enrich_cloudwatch_tags    | Enrich logs from CloudWatch with log group tags via Datadog backend (requires Resource Collection enabled). Mutually exclusive with `dd_fetch_log_group_tags` | `bool` | `null`  |
+| dd_fetch_lambda_tags         | Fetch Lambda tags                                                                                                                                             | `bool` | `null`  |
+| dd_fetch_log_group_tags      | **(Deprecated in favor of dd_enrich_cloudwatch_tags)** Fetch Log Group tags                                                                                   | `bool` | `null`  |
+| dd_fetch_step_functions_tags | Fetch Step Functions tags                                                                                                                                     | `bool` | `null`  |
+| dd_fetch_s3_tags             | **(Deprecated in favor of dd_enrich_s3_tags)** Fetch S3 bucket tags                                                                                           | `bool` | `null`  |
 
 ### Log Processing
 
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
-| dd_forward_log | Enable log forwarding | `bool` | `null` |
-| dd_step_functions_trace_enabled | Enable Step Functions tracing | `bool` | `null` |
-| dd_use_compression | Enable log compression | `bool` | `null` |
-| redact_ip | Redact IP addresses | `bool` | `null` |
-| redact_email | Redact email addresses | `bool` | `null` |
-| dd_scrubbing_rule | Regex pattern for log scrubbing | `string` | `null` |
-| dd_scrubbing_rule_replacement | Replacement text for scrubbing | `string` | `null` |
-| exclude_at_match | Regex to exclude logs | `string` | `null` |
-| include_at_match | Regex to include only matching logs | `string` | `null` |
-| dd_multiline_log_regex_pattern | Regex for multiline log detection | `string` | `null` |
+| Name                            | Description                         | Type     | Default |
+| ------------------------------- | ----------------------------------- | -------- | ------- |
+| dd_forward_log                  | Enable log forwarding               | `bool`   | `null`  |
+| dd_step_functions_trace_enabled | Enable Step Functions tracing       | `bool`   | `null`  |
+| dd_use_compression              | Enable log compression              | `bool`   | `null`  |
+| redact_ip                       | Redact IP addresses                 | `bool`   | `null`  |
+| redact_email                    | Redact email addresses              | `bool`   | `null`  |
+| dd_scrubbing_rule               | Regex pattern for log scrubbing     | `string` | `null`  |
+| dd_scrubbing_rule_replacement   | Replacement text for scrubbing      | `string` | `null`  |
+| exclude_at_match                | Regex to exclude logs               | `string` | `null`  |
+| include_at_match                | Regex to include only matching logs | `string` | `null`  |
+| dd_multiline_log_regex_pattern  | Regex for multiline log detection   | `string` | `null`  |
 
 ### Network Configuration
 
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
-| dd_use_vpc | Deploy in VPC | `bool` | `false` |
-| vpc_security_group_ids | VPC Security Group IDs | `list(string)` | `[]` |
-| vpc_subnet_ids | VPC Subnet IDs | `list(string)` | `[]` |
-| dd_http_proxy_url | List of url endpoints your proxy server exposes | `string` | `null` |
-| dd_no_proxy | List of domain names that should be excluded from the web proxy | `string` | `null` |
-| dd_no_ssl | Disable SSL | `string` | `null` |
-| dd_url | Custom endpoint URL | `string` | `null` |
-| dd_port | Custom endpoint port | `string` | `null` |
-| dd_skip_ssl_validation | Skip SSL validation | `bool` | `null` |
+| Name                   | Description                                                     | Type           | Default |
+| ---------------------- | --------------------------------------------------------------- | -------------- | ------- |
+| dd_use_vpc             | Deploy in VPC                                                   | `bool`         | `false` |
+| vpc_security_group_ids | VPC Security Group IDs                                          | `list(string)` | `[]`    |
+| vpc_subnet_ids         | VPC Subnet IDs                                                  | `list(string)` | `[]`    |
+| dd_http_proxy_url      | List of url endpoints your proxy server exposes                 | `string`       | `null`  |
+| dd_no_proxy            | List of domain names that should be excluded from the web proxy | `string`       | `null`  |
+| dd_no_ssl              | Disable SSL                                                     | `string`       | `null`  |
+| dd_url                 | Custom endpoint URL                                             | `string`       | `null`  |
+| dd_port                | Custom endpoint port                                            | `string`       | `null`  |
+| dd_skip_ssl_validation | Skip SSL validation                                             | `bool`         | `null`  |
 
 ### Advanced Configuration
 
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
-| dd_compression_level | Compression level (0-9) | `string` | `null` |
-| dd_max_workers | Max concurrent workers | `string` | `null` |
-| dd_log_level | Log level | `string` | `null` |
-| dd_store_failed_events | Store failed events in S3 | `bool` | `null` |
-| dd_forwarder_bucket_name | Custom S3 bucket name | `string` | `null` |
-| dd_forwarder_existing_bucket_name | Existing S3 bucket name | `string` | `null` |
-| dd_api_url | Custom API URL | `string` | `null` |
-| dd_trace_intake_url | Custom trace intake URL | `string` | `null` |
-| additional_target_lambda_arns | Additional Lambda ARNs to invoke | `string` | `null` |
+| Name                              | Description                      | Type     | Default |
+| --------------------------------- | -------------------------------- | -------- | ------- |
+| dd_compression_level              | Compression level (0-9)          | `string` | `null`  |
+| dd_max_workers                    | Max concurrent workers           | `string` | `null`  |
+| dd_log_level                      | Log level                        | `string` | `null`  |
+| dd_store_failed_events            | Store failed events in S3        | `bool`   | `null`  |
+| dd_forwarder_bucket_name          | Custom S3 bucket name            | `string` | `null`  |
+| dd_forwarder_existing_bucket_name | Existing S3 bucket name          | `string` | `null`  |
+| dd_api_url                        | Custom API URL                   | `string` | `null`  |
+| dd_trace_intake_url               | Custom trace intake URL          | `string` | `null`  |
+| additional_target_lambda_arns     | Additional Lambda ARNs to invoke | `string` | `null`  |
 
 ### IAM Configuration
 
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
-| iam_role_path | IAM role path | `string` | `"/"` |
-| permissions_boundary_arn | Permissions boundary ARN | `string` | `null` |
-| tags_cache_ttl_seconds | Tags cache TTL in seconds | `number` | `300` |
-| dd_forwarder_buckets_access_logs_target | Access logs target bucket | `string` | `null` |
+| Name                                    | Description               | Type     | Default |
+| --------------------------------------- | ------------------------- | -------- | ------- |
+| iam_role_path                           | IAM role path             | `string` | `"/"`   |
+| permissions_boundary_arn                | Permissions boundary ARN  | `string` | `null`  |
+| tags_cache_ttl_seconds                  | Tags cache TTL in seconds | `number` | `300`   |
+| dd_forwarder_buckets_access_logs_target | Access logs target bucket | `string` | `null`  |
 
 ## Boolean Variable Behavior
 
 For boolean variables with `null` defaults, three states are supported:
+
 - `true` → Sets environment variable to `"true"`
 - `false` → Sets environment variable to `"false"`
 - `null` (unset) → Environment variable not set (uses forwarder defaults)
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| datadog_forwarder_arn | Datadog Forwarder Lambda Function ARN |
-| datadog_forwarder_function_name | Datadog Forwarder Lambda Function Name |
-| datadog_forwarder_role_arn | Forwarder IAM Role ARN |
-| datadog_forwarder_role_name | Forwarder IAM Role Name |
-| dd_api_key_secret_arn | Secrets Manager secret ARN (if created) |
-| forwarder_bucket_name | S3 bucket name (if created or existing) |
-| forwarder_bucket_arn | S3 bucket ARN (if created) |
-| forwarder_log_group_name | CloudWatch Log Group name |
-| forwarder_log_group_arn | CloudWatch Log Group ARN |
+| Name                            | Description                             |
+| ------------------------------- | --------------------------------------- |
+| datadog_forwarder_arn           | Datadog Forwarder Lambda Function ARN   |
+| datadog_forwarder_function_name | Datadog Forwarder Lambda Function Name  |
+| datadog_forwarder_role_arn      | Forwarder IAM Role ARN                  |
+| datadog_forwarder_role_name     | Forwarder IAM Role Name                 |
+| dd_api_key_secret_arn           | Secrets Manager secret ARN (if created) |
+| forwarder_bucket_name           | S3 bucket name (if created or existing) |
+| forwarder_bucket_arn            | S3 bucket ARN (if created)              |
+| forwarder_log_group_name        | CloudWatch Log Group name               |
+| forwarder_log_group_arn         | CloudWatch Log Group ARN                |
 
 ## Setting up Log Forwarding
 
@@ -262,6 +267,7 @@ module "datadog_forwarder_us_west_2" {
 ```
 
 **Requirements when using `existing_iam_role_arn`:**
+
 - Must specify `dd_forwarder_existing_bucket_name` (S3 bucket accessible from all regions)
 - Must specify either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name`
 - Your IAM role must have appropriate permissions for resources in each target region
@@ -282,6 +288,7 @@ Enable debug logging by setting `dd_log_level = "DEBUG"` in your module configur
 ### Monitoring
 
 Monitor the forwarder using:
+
 - CloudWatch Logs: `/aws/lambda/{function_name}`
 - CloudWatch Metrics: Lambda function metrics
 

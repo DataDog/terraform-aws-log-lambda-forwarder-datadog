@@ -1,6 +1,6 @@
 # IAM Role for the Forwarder Lambda
 resource "aws_iam_role" "forwarder_role" {
-  name = "${var.function_name}-${var.region}-Role"
+  name = "${trimsuffix(format("%.${64-length("-${var.region}-Role")}s", var.function_name), "-")}-${var.region}-Role"
   path = var.iam_role_path
 
   assume_role_policy = jsonencode({
@@ -34,7 +34,7 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
 
 # IAM Policy for the Forwarder
 resource "aws_iam_role_policy" "forwarder_policy" {
-  name = "${var.function_name}-${var.region}-RolePolicy"
+  name = "${aws_iam_role.forwarder_role.name}Policy"
   role = aws_iam_role.forwarder_role.id
 
   policy = jsonencode({

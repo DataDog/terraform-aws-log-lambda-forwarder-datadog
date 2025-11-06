@@ -1,6 +1,6 @@
 # IAM Role for the Forwarder Lambda
 resource "aws_iam_role" "forwarder_role" {
-  name = "${trimsuffix(format("%.${64-length("-${var.region}-Role")}s", var.function_name), "-")}-${var.region}-Role"
+  name = "${trimsuffix(format("%.${64 - length("-${var.region}-Role")}s", var.function_name), "-")}-${var.region}-Role"
   path = var.iam_role_path
 
   assume_role_policy = jsonencode({

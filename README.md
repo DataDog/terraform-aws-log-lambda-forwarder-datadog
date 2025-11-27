@@ -10,6 +10,7 @@ This Terraform module creates the Datadog Log Lambda Forwarder infrastructure in
 - **Lambda Permissions**: For invocation by CloudWatch Logs, S3, SNS, and EventBridge
 - **Secrets Management**: Support for storing Datadog API key in Secrets Manager or SSM Parameter Store
 - **VPC Support**: Deploy forwarder in VPC with proxy
+- **Scheduler**: For scheduled retry of stored failed events
 
 ## Usage
 
@@ -120,17 +121,19 @@ For complete usage examples demonstrating different configuration scenarios, see
 
 ### Advanced Configuration
 
-| Name                              | Description                      | Type     | Default |
-| --------------------------------- | -------------------------------- | -------- | ------- |
-| dd_compression_level              | Compression level (0-9)          | `string` | `null`  |
-| dd_max_workers                    | Max concurrent workers           | `string` | `null`  |
-| dd_log_level                      | Log level                        | `string` | `null`  |
-| dd_store_failed_events            | Store failed events in S3        | `bool`   | `null`  |
-| dd_forwarder_bucket_name          | Custom S3 bucket name            | `string` | `null`  |
-| dd_forwarder_existing_bucket_name | Existing S3 bucket name          | `string` | `null`  |
-| dd_api_url                        | Custom API URL                   | `string` | `null`  |
-| dd_trace_intake_url               | Custom trace intake URL          | `string` | `null`  |
-| additional_target_lambda_arns     | Additional Lambda ARNs to invoke | `string` | `null`  |
+| Name                              | Description                                            | Type     | Default |
+| --------------------------------- | ------------------------------------------------------ | -------- | ------- |
+| dd_compression_level              | Compression level (0-9)                                | `string` | `null`  |
+| dd_max_workers                    | Max concurrent workers                                 | `string` | `null`  |
+| dd_log_level                      | Log level                                              | `string` | `null`  |
+| dd_store_failed_events            | Store failed events in S3                              | `bool`   | `null`  |
+| dd_schedule_retry_failed_events   | Periodically retry failed events (via AWS EventBridge) | `bool`   | `null`  |
+| dd_schedule_retry_interval        | Retry interval in hours for failed events              | `number` | `6`     |
+| dd_forwarder_bucket_name          | Custom S3 bucket name                                  | `string` | `null`  |
+| dd_forwarder_existing_bucket_name | Existing S3 bucket name                                | `string` | `null`  |
+| dd_api_url                        | Custom API URL                                         | `string` | `null`  |
+| dd_trace_intake_url               | Custom trace intake URL                                | `string` | `null`  |
+| additional_target_lambda_arns     | Additional Lambda ARNs to invoke                       | `string` | `null`  |
 
 ### IAM Configuration
 

@@ -290,3 +290,64 @@ resource "aws_cloudwatch_log_group" "forwarder_log_group" {
 
   tags = var.tags
 }
+
+# Scheduled retry
+
+resource "aws_iam_role" "scheduled_retry" {
+  count = var.dd_store_failed_events && var.dd_schedule_retry_failed_events ? 1 : 0
+
+  name = "${var.function_name}-${local.region}-retry"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = data.aws_partition.current.partition == "aws-cn" ? "scheduler.amazonaws.com.cn" : "scheduler.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  permissions_boundary = var.permissions_boundary_arn != null ? var.permissions_boundary_arn : null
+
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy" "scheduled_retry" {
+  count = var.dd_store_failed_events && var.dd_schedule_retry_failed_events ? 1 : 0
+
+  name = "${var.function_name}-${local.region}-retry-policy"
+  role = aws_iam_role.scheduled_retry[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "lambda:InvokeFunction",
+        ]
+        Effect   = "Allow"
+        Resource = aws_lambda_function.forwarder.arn
+      },
+    ]
+  })
+}
+
+resource "aws_scheduler_schedule" "scheduled_retry" {
+  count = var.dd_store_failed_events && var.dd_schedule_retry_failed_events ? 1 : 0
+
+  name                = "${var.function_name}-${local.region}-retry"
+  description         = "Retry the failed events from the Datadog Lambda Forwarder ${var.function_name}"
+  schedule_expression = "rate(${var.dd_schedule_retry_interval} hours)"
+  flexible_time_window {
+    mode = "OFF"
+  }
+  target {
+    arn      = aws_lambda_function.forwarder.arn
+    role_arn = aws_iam_role.scheduled_retry[0].arn
+    input    = jsonencode({ retry = true })
+  }
+}

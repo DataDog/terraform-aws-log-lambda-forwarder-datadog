@@ -370,6 +370,18 @@ variable "dd_store_failed_events" {
   description = "Set to true to enable the forwarder to store events that failed to send to Datadog."
 }
 
+variable "dd_schedule_retry_failed_events" {
+  type        = bool
+  default     = null
+  description = "Set to true to enable a scheduled forwarder invocation (via AWS EventBridge) to process stored failed events."
+}
+
+variable "dd_schedule_retry_interval" {
+  type        = number
+  default     = 6
+  description = "Interval in hours for scheduled forwarder invocation (via AWS EventBridge)."
+}
+
 variable "dd_forwarder_existing_bucket_name" {
   type        = string
   default     = null

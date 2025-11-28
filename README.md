@@ -276,6 +276,14 @@ module "datadog_forwarder_us_west_2" {
 - Your IAM role must have appropriate permissions for resources in each target region
 - Secrets/parameters containing the Datadog API key should exist in each target region
 
+## Scheduled retry
+
+When you enable `dd_store_failed_events`, the Lambda forwarder stores any events that couldn’t be sent to Datadog in an S3 bucket. These events can be logs, metrics, or traces. They aren’t automatically re‑processed on each Lambda invocation; instead, you must trigger a [manual Lambda run](https://docs.datadoghq.com/logs/guide/forwarder/?tab=manual) to process them again.
+
+You can automate this re‑processing by enabling `dd_schedule_retry_failed_events` parameter, creating a scheduled Lambda invocation through [AWS EventBridge](https://docs.aws.amazon.com/lambda/latest/dg/with-eventbridge-scheduler.html). By default, the forwarder attempts re‑processing every six hours.
+
+Keep in mind that log events can only be submitted with [timestamps up to 18 hours in the past](https://docs.datadoghq.com/logs/log_collection/?tab=host#custom-log-forwarding); older timestamps will cause the events to be discarded.
+
 ## Troubleshooting
 
 ### Common Issues

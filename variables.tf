@@ -2,14 +2,32 @@
 variable "dd_api_key" {
   type        = string
   default     = null
-  description = "The Datadog API key, which can be found from the APIs page (/account/settings#api). It will be stored in AWS Secrets Manager securely. If dd_api_key_secret_arn is also set, this value is ignored."
+  description = <<-EOT
+    The Datadog API key, which can be found from the APIs page (/account/settings#api).
+    When provided, the module will automatically create and manage a Secrets Manager secret.
+
+    NOTE: Do not use this with dd_api_key_secret_arn or dd_api_key_ssm_parameter_name.
+    Choose ONE approach for API key management.
+  EOT
   sensitive   = true
 }
 
 variable "dd_api_key_secret_arn" {
   type        = string
   default     = null
-  description = "The ARN of the secret storing the Datadog API key, if you already have it stored in Secrets Manager. You must store the secret as a plaintext, rather than a key-value pair."
+  description = <<-EOT
+    The ARN of an existing secret storing the Datadog API key in AWS Secrets Manager.
+    The secret must be stored as plaintext, not as a key-value pair.
+
+    IMPORTANT: If you're creating this secret in the same Terraform plan, you'll encounter
+    "Invalid count argument" errors. Solutions:
+    1. Set create_dd_api_key_secret = false (recommended for same-plan creation)
+    2. Create the secret in a separate Terraform state/plan
+    3. Use a data source to reference a pre-existing secret
+    4. Consider using dd_api_key instead (module creates secret automatically)
+
+    NOTE: Do not use this with dd_api_key or dd_api_key_ssm_parameter_name.
+  EOT
 
   validation {
     condition     = var.dd_api_key_secret_arn == null || can(regex("^arn:.*:secretsmanager:.*", var.dd_api_key_secret_arn))
@@ -20,11 +38,46 @@ variable "dd_api_key_secret_arn" {
 variable "dd_api_key_ssm_parameter_name" {
   type        = string
   default     = null
-  description = "The name of the SSM parameter containing Datadog's API key. If set, both dd_api_key and dd_api_key_secret_arn will be ignored, the forwarder will use the SSM parameter name to fetch the API key."
+  description = <<-EOT
+    The name of an existing SSM Parameter Store parameter containing the Datadog API key.
+
+    IMPORTANT: If you're creating this parameter in the same Terraform plan, you'll encounter
+    "Invalid count argument" errors. Solutions:
+    1. Set create_dd_api_key_secret = false (recommended for same-plan creation)
+    2. Create the parameter in a separate Terraform state/plan
+    3. Use a data source to reference a pre-existing parameter
+    4. Consider using dd_api_key instead (module creates secret automatically)
+
+    NOTE: Do not use this with dd_api_key or dd_api_key_secret_arn.
+    When set, this takes precedence over secret-based configuration.
+  EOT
 
   validation {
     condition     = var.dd_api_key_ssm_parameter_name == null || can(regex("^/[a-zA-Z0-9/_.-]*$", var.dd_api_key_ssm_parameter_name))
     error_message = "dd_api_key_ssm_parameter_name must match the pattern ^/[a-zA-Z0-9/_.-]*$."
+  }
+}
+
+variable "create_dd_api_key_secret" {
+  type        = bool
+  default     = null
+  description = <<-EOT
+    Controls whether the module creates a Secrets Manager secret for the Datadog API key.
+    - true: Force creation of secret (requires dd_api_key to be set)
+    - false: Do not create secret (requires dd_api_key_secret_arn or dd_api_key_ssm_parameter_name)
+    - null (default): Automatic behavior - create secret only if neither dd_api_key_secret_arn nor dd_api_key_ssm_parameter_name is provided
+
+    Set this to false when using secrets/parameters created in the same Terraform plan to avoid "Invalid count argument" errors.
+  EOT
+
+  validation {
+    condition     = var.create_dd_api_key_secret != true || var.dd_api_key != null
+    error_message = "When create_dd_api_key_secret is true, dd_api_key must be provided."
+  }
+
+  validation {
+    condition     = var.create_dd_api_key_secret != false || (var.dd_api_key_secret_arn != null || var.dd_api_key_ssm_parameter_name != null)
+    error_message = "When create_dd_api_key_secret is false, either dd_api_key_secret_arn or dd_api_key_ssm_parameter_name must be provided."
   }
 }
 

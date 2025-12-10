@@ -236,7 +236,7 @@ resource "aws_lambda_function" "forwarder" {
     )
   }
 
-  tags = var.tags
+  tags = local.tags_with_version
 }
 
 # Lambda permissions
@@ -294,7 +294,7 @@ resource "aws_cloudwatch_log_group" "forwarder_log_group" {
 # Scheduled retry
 
 resource "aws_iam_role" "scheduled_retry" {
-  count = var.dd_store_failed_events && var.dd_schedule_retry_failed_events ? 1 : 0
+  count = coalesce(var.dd_store_failed_events, false) && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
 
   name = "${var.function_name}-${local.region}-retry"
 
@@ -317,7 +317,7 @@ resource "aws_iam_role" "scheduled_retry" {
 }
 
 resource "aws_iam_role_policy" "scheduled_retry" {
-  count = var.dd_store_failed_events && var.dd_schedule_retry_failed_events ? 1 : 0
+  count = coalesce(var.dd_store_failed_events, false) && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
 
   name = "${var.function_name}-${local.region}-retry-policy"
   role = aws_iam_role.scheduled_retry[0].id
@@ -337,7 +337,7 @@ resource "aws_iam_role_policy" "scheduled_retry" {
 }
 
 resource "aws_scheduler_schedule" "scheduled_retry" {
-  count = var.dd_store_failed_events && var.dd_schedule_retry_failed_events ? 1 : 0
+  count = coalesce(var.dd_store_failed_events, false) && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
 
   name                = "${var.function_name}-${local.region}-retry"
   description         = "Retry the failed events from the Datadog Lambda Forwarder ${var.function_name}"

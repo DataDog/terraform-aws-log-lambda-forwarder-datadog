@@ -5,7 +5,7 @@ data "aws_partition" "current" {}
 
 # Fetch GitHub releases to get forwarder version
 data "http" "github_releases" {
-  url = "https://api.github.com/repos/DataDog/datadog-serverless-functions/releases?per_page=50"
+  url = "https://api.github.com/repos/DataDog/datadog-serverless-functions/releases?per_page=100"
 
   request_headers = {
     Accept = "application/vnd.github.v3+json"

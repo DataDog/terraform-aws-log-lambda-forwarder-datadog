@@ -69,15 +69,16 @@ For complete usage examples demonstrating different configuration scenarios, see
 
 ### Datadog Configuration
 
-| Name                          | Description                    | Type     | Default           |
-| ----------------------------- | ------------------------------ | -------- | ----------------- |
-| dd_api_key                    | Datadog API key                | `string` | `null`            |
-| dd_api_key_secret_arn         | ARN of secret storing API key  | `string` | `null`            |
-| dd_api_key_ssm_parameter_name | SSM parameter name for API key | `string` | `null`            |
-| dd_site                       | Datadog site                   | `string` | `"datadoghq.com"` |
-| dd_tags                       | Custom tags for forwarded logs | `string` | `null`            |
-| dd_trace_enabled              | Enable trace forwarding        | `bool`   | `true`            |
-| dd_enhanced_metrics           | Enable enhanced Lambda metrics | `bool`   | `false`           |
+| Name                          | Description                      | Type     | Default           |
+| ----------------------------- | -------------------------------- | -------- | ----------------- |
+| dd_api_key                    | Datadog API key                  | `string` | `null`            |
+| dd_api_key_secret_arn         | ARN of secret storing API key    | `string` | `null`            |
+| dd_api_key_ssm_parameter_name | SSM parameter name for API key   | `string` | `null`            |
+| dd_site                       | Datadog site                     | `string` | `"datadoghq.com"` |
+| dd_tags                       | Custom tags for forwarded logs   | `string` | `null`            |
+| dd_source                     | Custom source for forwarded logs | `string` | `null`            |
+| dd_trace_enabled              | Enable trace forwarding          | `bool`   | `true`            |
+| dd_enhanced_metrics           | Enable enhanced Lambda metrics   | `bool`   | `false`           |
 
 ### Tag Enrichment & Fetching
 

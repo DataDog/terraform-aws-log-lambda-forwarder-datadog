@@ -3,10 +3,9 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
-# Get latest layer version from GitHub releases when "latest" is specified
-data "http" "latest_release" {
-  count = var.layer_version == "latest" ? 1 : 0
-  url   = "https://api.github.com/repos/DataDog/datadog-serverless-functions/releases/latest"
+# Fetch GitHub releases to get forwarder version
+data "http" "github_releases" {
+  url = "https://api.github.com/repos/DataDog/datadog-serverless-functions/releases?per_page=100"
 
   request_headers = {
     Accept = "application/vnd.github.v3+json"
@@ -15,8 +14,21 @@ data "http" "latest_release" {
 
 # Local values
 locals {
-  # Extract layer version from GitHub release title: "aws-dd-forwarder-4.14.0 (Layer v89)" -> "89"
-  layer_version = var.layer_version == "latest" ? regex("\\(Layer v([0-9]+)\\)", jsondecode(data.http.latest_release[0].response_body).name)[0] : var.layer_version
+  # Parse GitHub releases (newest first)
+  github_releases = jsondecode(data.http.github_releases.response_body)
+
+  # Find target release: first one if "latest", otherwise search for matching layer version
+  target_release = (
+    var.layer_version == "latest"
+    ? local.github_releases[0]
+    : try([for r in local.github_releases : r if can(regex("\\(Layer v${var.layer_version}\\)", r.name))][0], null)
+  )
+
+  # Extract layer version from release name: "aws-dd-forwarder-5.1.0 (Layer v92)" -> "92"
+  layer_version = var.layer_version == "latest" ? regex("\\(Layer v([0-9]+)\\)", local.target_release.name)[0] : var.layer_version
+
+  # Extract forwarder version from release name: "aws-dd-forwarder-5.1.0" -> "5.1.0"
+  forwarder_version = local.target_release != null ? regex("aws-dd-forwarder-(.+)", local.target_release.tag_name)[0] : null
 
   # Determine if we need to create an S3 bucket for caching and failed events storage
   create_s3_bucket = (coalesce(var.dd_fetch_log_group_tags, false) || coalesce(var.dd_fetch_lambda_tags, false) || coalesce(var.dd_fetch_s3_tags, false) || coalesce(var.dd_store_failed_events, false)) && var.dd_forwarder_existing_bucket_name == null
@@ -49,4 +61,11 @@ locals {
     var.dd_api_key_secret_arn
   ) : null
 
+  # Merge dd_forwarder_version tag with user-provided tags (only when version is known)
+  tags_with_version = merge(
+    var.tags,
+    local.forwarder_version != null ? {
+      dd_forwarder_version = local.forwarder_version
+    } : {}
+  )
 }

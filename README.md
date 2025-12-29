@@ -14,11 +14,11 @@ This Terraform module creates the Datadog Log Lambda Forwarder infrastructure in
 
 ## Usage
 
-For complete usage examples demonstrating different configuration scenarios, see the [examples](./examples/) directory:
+For complete usage examples demonstrating different configuration scenarios, see the [examples](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-datadog/tree/main/examples) directory:
 
-- **[Basic Example](./examples/basic/)** - Simple setup with minimal configuration, includes examples for API key storage using Secrets Manager or SSM Parameter Store
-- **[VPC Example](./examples/vpc/)** - VPC deployment with enhanced metrics, custom log processing, and comprehensive tagging
-- **[Multi-Region Example](./examples/multi-region/)** - Basic forwarder setup deployed across multiple AWS regions
+- **[Basic Example](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-datadog/tree/main/examples/basic)** - Simple setup with minimal configuration, includes examples for API key storage using Secrets Manager or SSM Parameter Store
+- **[VPC Example](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-datadog/tree/main/examples/vpc)** - VPC deployment with enhanced metrics, custom log processing, and comprehensive tagging
+- **[Multi-Region Example](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-datadog/tree/main/examples/multi-region)** - Basic forwarder setup deployed across multiple AWS regions
 
 ## Requirements
 
@@ -69,15 +69,16 @@ For complete usage examples demonstrating different configuration scenarios, see
 
 ### Datadog Configuration
 
-| Name                          | Description                    | Type     | Default           |
-| ----------------------------- | ------------------------------ | -------- | ----------------- |
-| dd_api_key                    | Datadog API key                | `string` | `null`            |
-| dd_api_key_secret_arn         | ARN of secret storing API key  | `string` | `null`            |
-| dd_api_key_ssm_parameter_name | SSM parameter name for API key | `string` | `null`            |
-| dd_site                       | Datadog site                   | `string` | `"datadoghq.com"` |
-| dd_tags                       | Custom tags for forwarded logs | `string` | `null`            |
-| dd_trace_enabled              | Enable trace forwarding        | `bool`   | `true`            |
-| dd_enhanced_metrics           | Enable enhanced Lambda metrics | `bool`   | `false`           |
+| Name                          | Description                      | Type     | Default           |
+| ----------------------------- | -------------------------------- | -------- | ----------------- |
+| dd_api_key                    | Datadog API key                  | `string` | `null`            |
+| dd_api_key_secret_arn         | ARN of secret storing API key    | `string` | `null`            |
+| dd_api_key_ssm_parameter_name | SSM parameter name for API key   | `string` | `null`            |
+| dd_site                       | Datadog site                     | `string` | `"datadoghq.com"` |
+| dd_tags                       | Custom tags for forwarded logs   | `string` | `null`            |
+| dd_source                     | Custom source for forwarded logs | `string` | `null`            |
+| dd_trace_enabled              | Enable trace forwarding          | `bool`   | `true`            |
+| dd_enhanced_metrics           | Enable enhanced Lambda metrics   | `bool`   | `false`           |
 
 ### Tag Enrichment & Fetching
 
@@ -180,14 +181,14 @@ This method automatically configures triggers for services like CloudWatch Log G
 
 ### Manual Trigger Setup
 
-The [examples](./examples/) directory contains practical implementations of log subscription filters and event triggers. Common integration patterns include:
+The [examples](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-datadog/tree/main/examples) directory contains practical implementations of log subscription filters and event triggers. Common integration patterns include:
 
 - **CloudWatch Log Groups**: Subscription filters to forward log streams
 - **S3 Bucket Notifications**: Trigger forwarder when log files are uploaded
 - **SNS Topics**: Forward CloudWatch alarms and other notifications
 - **EventBridge Rules**: Forward custom application events
 
-See the [basic](./examples/basic/) and [vpc](./examples/vpc/) examples for complete implementation details.
+See the [basic](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-datadog/tree/main/examples/basic) and [vpc](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-datadog/tree/main/examples/vpc) examples for complete implementation details.
 
 ## IAM Permissions
 

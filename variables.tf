@@ -172,6 +172,12 @@ variable "dd_tags" {
   description = "Add custom tags to forwarded logs. Comma-delimited string without trailing comma, e.g., env:prod,stack:classic"
 }
 
+variable "dd_source" {
+  type        = string
+  default     = null
+  description = "Override the source attribute for all logs forwarded by Lambda Forwarder. By default, the Forwarder automatically detects the source based on the log origin (e.g., lambda, s3, cloudwatch, rds). When set, all logs will use the specified source value instead, and a source_overridden:true tag will be added to the logs."
+}
+
 variable "dd_enrich_s3_tags" {
   type        = bool
   default     = null

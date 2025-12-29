@@ -254,6 +254,7 @@ resource "aws_lambda_function" "forwarder" {
       # Optional environment variables
       {
         DD_TAGS                         = var.dd_tags
+        DD_SOURCE                       = var.dd_source
         DD_ENRICH_S3_TAGS               = var.dd_enrich_s3_tags != null ? tostring(var.dd_enrich_s3_tags) : null
         DD_ENRICH_CLOUDWATCH_TAGS       = var.dd_enrich_cloudwatch_tags != null ? tostring(var.dd_enrich_cloudwatch_tags) : null
         DD_FETCH_LAMBDA_TAGS            = var.dd_fetch_lambda_tags != null ? tostring(var.dd_fetch_lambda_tags) : null
@@ -289,7 +290,7 @@ resource "aws_lambda_function" "forwarder" {
     )
   }
 
-  tags = var.tags
+  tags = local.tags_with_version
 
   lifecycle {
     precondition {
@@ -374,7 +375,7 @@ resource "aws_cloudwatch_log_group" "forwarder_log_group" {
 # Scheduled retry
 
 resource "aws_iam_role" "scheduled_retry" {
-  count = var.dd_store_failed_events && var.dd_schedule_retry_failed_events ? 1 : 0
+  count = coalesce(var.dd_store_failed_events, false) && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
 
   name = "${var.function_name}-${local.region}-retry"
 
@@ -397,7 +398,7 @@ resource "aws_iam_role" "scheduled_retry" {
 }
 
 resource "aws_iam_role_policy" "scheduled_retry" {
-  count = var.dd_store_failed_events && var.dd_schedule_retry_failed_events ? 1 : 0
+  count = coalesce(var.dd_store_failed_events, false) && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
 
   name = "${var.function_name}-${local.region}-retry-policy"
   role = aws_iam_role.scheduled_retry[0].id
@@ -417,7 +418,7 @@ resource "aws_iam_role_policy" "scheduled_retry" {
 }
 
 resource "aws_scheduler_schedule" "scheduled_retry" {
-  count = var.dd_store_failed_events && var.dd_schedule_retry_failed_events ? 1 : 0
+  count = coalesce(var.dd_store_failed_events, false) && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
 
   name                = "${var.function_name}-${local.region}-retry"
   description         = "Retry the failed events from the Datadog Lambda Forwarder ${var.function_name}"

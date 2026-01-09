@@ -12,7 +12,7 @@ variable "dd_allowed_kms_keys" {
   default     = ["*"]
   validation {
     condition = alltrue([
-      for arn in var.kms_key_arns : arn == "*" || can(regex("^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[a-f0-9-]{36}$", arn))
+      for arn in var.dd_allowed_kms_keys : arn == "*" || can(regex("^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[a-f0-9-]{36}$", arn))
     ])
     error_message = "All KMS key ARNs must be valid ARNs in the format 'arn:aws:kms:region:account:key/key-id' or '*' for all keys."
   }

@@ -6,6 +6,18 @@ variable "dd_api_key" {
   sensitive   = true
 }
 
+variable "dd_allowed_kms_keys" {
+  type        = list(string)
+  description = "KMS key arns which can be used to decrypt data, default is all"
+  default     = ["*"]
+  validation {
+    condition = alltrue([
+      for arn in var.dd_allowed_kms_keys : arn == "*" || can(regex("^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[a-f0-9-]{36}$", arn))
+    ])
+    error_message = "All KMS key ARNs must be valid ARNs in the format 'arn:aws:kms:region:account:key/key-id' or '*' for all keys."
+  }
+}
+
 variable "dd_api_key_secret_arn" {
   type        = string
   default     = null

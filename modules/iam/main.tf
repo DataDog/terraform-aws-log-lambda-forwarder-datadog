@@ -83,7 +83,7 @@ resource "aws_iam_role_policy" "forwarder_policy" {
         {
           Effect   = "Allow"
           Action   = ["kms:Decrypt"]
-          Resource = "*"
+          Resource = var.dd_allowed_kms_keys
         }
       ],
 

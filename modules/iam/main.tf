@@ -105,7 +105,7 @@ resource "aws_iam_role_policy" "forwarder_policy" {
             "ssm:GetParameters",
             "ssm:GetParametersByPath"
           ]
-          Resource = "*"
+          Resource = "arn:${var.partition}:ssm:${var.region}:${var.account_id}:parameter${var.dd_api_key_ssm_parameter_name}"
         }
       ] : [],
 

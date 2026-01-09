@@ -48,6 +48,19 @@ locals {
   # Default layer ARN based on partition and region
   default_layer_arn = "arn:${data.aws_partition.current.partition}:lambda:${local.region}:${local.dd_account_id}:layer:Datadog-Forwarder:${local.layer_version}"
 
+  # API Key Secret Management - detect usage patterns
+  is_using_auto_secret_creation = var.dd_api_key != null && var.dd_api_key_secret_arn == null && var.dd_api_key_ssm_parameter_name == null
+  has_external_secret_reference = var.dd_api_key_secret_arn != null || var.dd_api_key_ssm_parameter_name != null
+
+  # Determine whether to create secret - respects explicit flag or falls back to automatic detection
+  should_create_secret = var.create_dd_api_key_secret != null ? var.create_dd_api_key_secret : local.is_using_auto_secret_creation
+
+  # Calculate effective secret ARN for IAM and Lambda usage
+  effective_secret_arn = var.dd_api_key_ssm_parameter_name == null ? (
+    local.should_create_secret ? try(aws_secretsmanager_secret.dd_api_key_secret[0].arn, null) :
+    var.dd_api_key_secret_arn
+  ) : null
+
   # Merge dd_forwarder_version tag with user-provided tags (only when version is known)
   tags_with_version = merge(
     var.tags,

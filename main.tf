@@ -157,7 +157,7 @@ resource "aws_lambda_function" "forwarder" {
   description   = "Pushes logs, metrics and traces from AWS to Datadog."
   role          = local.iam_role_arn
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.13"
+  runtime       = var.layer_version == "latest" || (can(tonumber(var.layer_version)) && tonumber(var.layer_version) >= 94) ? "python3.14" : "python3.13"
   architectures = ["arm64"]
   memory_size   = var.memory_size
   timeout       = var.timeout

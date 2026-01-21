@@ -22,16 +22,16 @@ For complete usage examples demonstrating different configuration scenarios, see
 
 ## Requirements
 
-| Name      | Version |
-| --------- | ------- |
-| terraform | >= 1.9  |
-| aws       | >= 6.0  |
+| Name      | Version  |
+| --------- | -------- |
+| terraform | >= 1.9   |
+| aws       | >= 6.21  |
 
 ## Providers
 
-| Name | Version |
-| ---- | ------- |
-| aws  | >= 5.0  |
+| Name | Version  |
+| ---- | -------- |
+| aws  | >= 6.21  |
 
 ## Inputs
 

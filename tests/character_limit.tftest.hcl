@@ -7,6 +7,7 @@ variables {
   function_name = "very-long-function-name-that-will-end-up-being-longer-than-sixtyfour-chars"
   partition     = "aws"
   iam_role_path = "/"
+  account_id    = "123456789012"
 }
 
 run "character_limit_test" {

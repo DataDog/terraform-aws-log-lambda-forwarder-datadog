@@ -72,14 +72,13 @@ variable "timeout" {
 variable "existing_iam_role_arn" {
   type        = string
   default     = null
-  description = "ARN of existing IAM role to use for the Lambda function. If not provided, a new IAM role will be created."
+  description = "ARN of existing IAM role to use for the Lambda function. If not provided, a new IAM role will be created. When using an existing role, you are responsible for ensuring it has the necessary permissions for any resources the module creates (S3 bucket, CloudWatch Logs, etc.). Use the module outputs (forwarder_bucket_arn, forwarder_log_group_arn) to configure your IAM role policies."
 
   validation {
     condition = var.existing_iam_role_arn == null || (
-      var.dd_forwarder_existing_bucket_name != null &&
-      (var.dd_api_key_ssm_parameter_name != null || var.dd_api_key_secret_arn != null)
+      var.dd_api_key_ssm_parameter_name != null || var.dd_api_key_secret_arn != null
     )
-    error_message = "When using existing_iam_role_arn, you must also specify dd_forwarder_existing_bucket_name and either dd_api_key_ssm_parameter_name or dd_api_key_secret_arn to avoid cross-region resource conflicts."
+    error_message = "When using existing_iam_role_arn, you must also specify either dd_api_key_ssm_parameter_name or dd_api_key_secret_arn, since the module cannot grant your existing role access to a newly created secret."
   }
 }
 

@@ -40,13 +40,19 @@ variable "dd_api_key_ssm_parameter_name" {
   }
 }
 
+variable "skip_dd_site_validation" {
+  type        = bool
+  default     = false
+  description = "Skip validation of dd_site value. For internal use only."
+}
+
 variable "dd_site" {
   type        = string
   default     = "datadoghq.com"
   description = "Define your Datadog Site to send data to."
 
   validation {
-    condition     = contains(["datadoghq.com", "datadoghq.eu", "us3.datadoghq.com", "us5.datadoghq.com", "ap1.datadoghq.com", "ap2.datadoghq.com", "ddog-gov.com"], var.dd_site)
+    condition     = var.skip_dd_site_validation || contains(["datadoghq.com", "datadoghq.eu", "us3.datadoghq.com", "us5.datadoghq.com", "ap1.datadoghq.com", "ap2.datadoghq.com", "ddog-gov.com"], var.dd_site)
     error_message = "dd_site must be one of: datadoghq.com, datadoghq.eu, us3.datadoghq.com, us5.datadoghq.com, ap1.datadoghq.com, ap2.datadoghq.com, ddog-gov.com."
   }
 }

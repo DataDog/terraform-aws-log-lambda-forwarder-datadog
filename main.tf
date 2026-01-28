@@ -9,6 +9,7 @@ module "iam" {
   permissions_boundary_arn          = var.permissions_boundary_arn
   partition                         = data.aws_partition.current.partition
   region                            = local.region
+  account_id                        = data.aws_caller_identity.current.account_id
   tags                              = var.tags
   s3_bucket_permissions             = var.dd_forwarder_existing_bucket_name != null || local.create_s3_bucket
   forwarder_bucket_arn              = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].arn : null
@@ -157,7 +158,7 @@ resource "aws_lambda_function" "forwarder" {
   description   = "Pushes logs, metrics and traces from AWS to Datadog."
   role          = local.iam_role_arn
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.13"
+  runtime       = var.layer_version == "latest" ? "python3.14" : (can(tonumber(var.layer_version)) && tonumber(var.layer_version) >= 94 ? "python3.14" : "python3.13")
   architectures = ["arm64"]
   memory_size   = var.memory_size
   timeout       = var.timeout

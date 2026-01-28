@@ -3,32 +3,25 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
-# Fetch GitHub releases to get forwarder version
-data "http" "github_releases" {
-  url = "https://api.github.com/repos/DataDog/datadog-serverless-functions/releases?per_page=100"
-
-  request_headers = {
-    Accept = "application/vnd.github.v3+json"
-  }
+# Fetch version mapping from public S3 bucket
+data "http" "forwarder_versions" {
+  url = "https://datadog-opensource-asset-versions.s3.us-east-1.amazonaws.com/forwarder/versions.json"
 }
 
 # Local values
 locals {
-  # Parse GitHub releases (newest first)
-  github_releases = jsondecode(data.http.github_releases.response_body)
+  # Parse version mapping from S3
+  version_data = jsondecode(data.http.forwarder_versions.response_body)
 
-  # Find target release: first one if "latest", otherwise search for matching layer version
-  target_release = (
+  # Determine layer version: use latest or specified version
+  layer_version = var.layer_version == "latest" ? local.version_data.latest.layer_version : var.layer_version
+
+  # Determine forwarder version: use latest or lookup in mappings
+  forwarder_version = (
     var.layer_version == "latest"
-    ? local.github_releases[0]
-    : try([for r in local.github_releases : r if can(regex("\\(Layer v${var.layer_version}\\)", r.name))][0], null)
+    ? local.version_data.latest.forwarder_version
+    : lookup(local.version_data.mappings, var.layer_version, null)
   )
-
-  # Extract layer version from release name: "aws-dd-forwarder-5.1.0 (Layer v92)" -> "92"
-  layer_version = var.layer_version == "latest" ? regex("\\(Layer v([0-9]+)\\)", local.target_release.name)[0] : var.layer_version
-
-  # Extract forwarder version from release name: "aws-dd-forwarder-5.1.0" -> "5.1.0"
-  forwarder_version = local.target_release != null ? regex("aws-dd-forwarder-(.+)", local.target_release.tag_name)[0] : null
 
   # Determine if we need to create an S3 bucket for caching and failed events storage
   create_s3_bucket = (coalesce(var.dd_fetch_log_group_tags, false) || coalesce(var.dd_fetch_lambda_tags, false) || coalesce(var.dd_fetch_s3_tags, false) || coalesce(var.dd_store_failed_events, false)) && var.dd_forwarder_existing_bucket_name == null

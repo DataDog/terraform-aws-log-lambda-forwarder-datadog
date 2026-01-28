@@ -99,3 +99,8 @@ variable "region" {
   type        = string
   description = "AWS region for resource naming"
 }
+
+variable "account_id" {
+  type        = string
+  description = "AWS account ID"
+}

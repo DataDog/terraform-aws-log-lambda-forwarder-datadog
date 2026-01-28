@@ -18,8 +18,8 @@ run "default_config_test" {
   }
 
   assert {
-    condition     = aws_lambda_function.forwarder.runtime == "python3.13"
-    error_message = "Lambda function should use Python 3.13 runtime"
+    condition     = aws_lambda_function.forwarder.runtime == "python3.14"
+    error_message = "Lambda function should use Python 3.14 runtime"
   }
 
   assert {

@@ -138,12 +138,13 @@ For complete usage examples demonstrating different configuration scenarios, see
 
 ### IAM Configuration
 
-| Name                                    | Description               | Type     | Default |
-| --------------------------------------- | ------------------------- | -------- | ------- |
-| iam_role_path                           | IAM role path             | `string` | `"/"`   |
-| permissions_boundary_arn                | Permissions boundary ARN  | `string` | `null`  |
-| tags_cache_ttl_seconds                  | Tags cache TTL in seconds | `number` | `300`   |
-| dd_forwarder_buckets_access_logs_target | Access logs target bucket | `string` | `null`  |
+| Name                                    | Description                            | Type           | Default |
+| --------------------------------------- | -------------------------------------- | -------------- | ------- |
+| iam_role_path                           | IAM role path                          | `string`       | `"/"`   |
+| permissions_boundary_arn                | Permissions boundary ARN               | `string`       | `null`  |
+| tags_cache_ttl_seconds                  | Tags cache TTL in seconds              | `number`       | `300`   |
+| dd_allowed_kms_keys                     | Allow access to following KMS Key ARNs | `list(string)` | `["*"]` |
+| dd_forwarder_buckets_access_logs_target | Access logs target bucket              | `string`       | `null`  |
 
 ## Boolean Variable Behavior
 

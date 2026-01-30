@@ -55,6 +55,12 @@ variable "dd_api_key_secret_arn" {
   description = "ARN of the secret storing the Datadog API key"
 }
 
+variable "dd_allowed_kms_keys" {
+  type        = list(string)
+  description = "KMS key arns which can be used to decrypt data, default is all"
+  default     = ["*"]
+}
+
 variable "dd_fetch_lambda_tags" {
   type        = bool
   default     = null

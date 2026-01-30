@@ -64,7 +64,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 | log_retention_in_days | CloudWatch log retention                                                                                                                                                          | `number`      | `90`                 |
 | layer_version         | Version of the Datadog Forwarder Lambda layer                                                                                                                                     | `string`      | `"latest"`           |
 | layer_arn             | Custom layer ARN (optional)                                                                                                                                                       | `string`      | `null`               |
-| existing_iam_role_arn | ARN of existing IAM role. **Requires** `dd_forwarder_existing_bucket_name` and either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name` to avoid cross-region conflicts. | `string`      | `null`               |
+| existing_iam_role_arn | ARN of existing IAM role to use for the Lambda function. When using an existing role, you must provide either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name`, and you are responsible for ensuring the role has the necessary permissions for any resources the module creates. See [Using an Existing IAM Role](#using-an-existing-iam-role) for details. | `string`      | `null`               |
 | tags                  | Resource tags                                                                                                                                                                     | `map(string)` | `{}`                 |
 
 ### Datadog Configuration
@@ -204,7 +204,16 @@ The forwarder Lambda function is granted the following permissions:
 - **VPC**: Network interface management (if VPC is enabled)
 - **Lambda**: Invoke additional target functions (if configured)
 
-**⚠️ Important**: When using `existing_iam_role_arn`, you must also provide `dd_forwarder_existing_bucket_name` and either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name`. This validation prevents cross-region resource conflicts in multi-region deployments. For details on managing your IAM, S3, and Secret resources externally to the module, see [Option 2](#option-2-bring-your-own-iam-role-s3-bucket-and-secret-reference) below.
+### Using an Existing IAM Role
+
+When using `existing_iam_role_arn`, you are responsible for ensuring your IAM role has the necessary permissions for all resources the module creates or uses:
+
+- **API Key Access**: You must provide either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name` (the module cannot grant your existing role access to a newly created secret)
+- **S3 Bucket**: If the module creates an S3 bucket (for tag caching with `dd_fetch_lambda_tags` or failed events with `dd_store_failed_events`), your role needs read/write access. Use the `forwarder_bucket_arn` output to configure your IAM policy.
+- **CloudWatch Logs**: Your role needs permissions to write to CloudWatch Logs. Use the `forwarder_log_group_arn` output to configure your IAM policy.
+- **Other Permissions**: Depending on your configuration, your role may need additional permissions (KMS decrypt, Resource Groups for tag fetching, VPC network interfaces, etc.)
+
+This approach is useful when you want to apply least-privilege policies that are more restrictive than the module's default IAM role.
 
 ## Multi-Region Deployments
 
@@ -241,39 +250,41 @@ module "datadog_forwarder_us_west_2" {
 
 The module automatically includes the region in IAM resource names to prevent global resource conflicts.
 
-### Option 2: Bring Your Own IAM Role, S3 Bucket, and Secret reference
+### Option 2: Bring Your Own IAM Role
 
-For advanced use cases where you want to manage IAM roles centrally, you must provide **all** external resources to avoid cross-region conflicts:
+If you want to use your own IAM role (e.g., for least-privilege policies), you can provide `existing_iam_role_arn` while letting the module create other resources:
 
 ```hcl
-provider "aws" {
-  region = "us-east-1"
-}
+module "datadog_forwarder" {
+  source = "path/to/this/module"
 
-module "datadog_forwarder_us_east_1" {
+  function_name                     = "DatadogForwarder"
+  existing_iam_role_arn             = "arn:aws:iam::123456789012:role/MyDatadogForwarderRole"
+  dd_api_key_ssm_parameter_name     = "/datadog/api-key"  # Or use dd_api_key_secret_arn
+  dd_site                           = "datadoghq.com"
+}
+```
+
+Your IAM role must have permissions for resources the module creates. Use the module outputs (`forwarder_bucket_arn`, `forwarder_log_group_arn`) to configure your IAM policies. See [Using an Existing IAM Role](#using-an-existing-iam-role) for details.
+
+### Option 3: Bring Your Own IAM Role, S3 Bucket, and Secret Reference
+
+For advanced use cases where you want full control over all resources:
+
+```hcl
+module "datadog_forwarder" {
   source = "path/to/this/module"
 
   function_name                      = "DatadogForwarder"
   existing_iam_role_arn              = "arn:aws:iam::123456789012:role/DatadogForwarderRole"
-  dd_forwarder_existing_bucket_name  = "my-global-datadog-bucket"
+  dd_forwarder_existing_bucket_name  = "my-datadog-bucket"
   dd_api_key_secret_arn              = "arn:aws:secretsmanager:us-east-1:123456789012:secret:datadog-api-key-abc123"
-}
-
-module "datadog_forwarder_us_west_2" {
-  source = "path/to/this/module"
-  region = "us-west-2"
-
-  function_name                      = "DatadogForwarder"
-  existing_iam_role_arn              = "arn:aws:iam::123456789012:role/DatadogForwarderRole"
-  dd_forwarder_existing_bucket_name  = "my-global-datadog-bucket"
-  dd_api_key_secret_arn              = "arn:aws:secretsmanager:us-west-2:123456789012:secret:datadog-api-key-def456"
 }
 ```
 
 **Requirements when using `existing_iam_role_arn`:**
 
-- Must specify `dd_forwarder_existing_bucket_name` (S3 bucket accessible from all regions)
-- Must specify either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name`
+- Must specify either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name` (the module cannot grant your existing role access to a newly created secret)
 - Your IAM role must have appropriate permissions for resources in each target region
 - Secrets/parameters containing the Datadog API key should exist in each target region
 

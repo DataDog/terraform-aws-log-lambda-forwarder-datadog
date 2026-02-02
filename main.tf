@@ -16,6 +16,7 @@ module "iam" {
   dd_forwarder_existing_bucket_name = var.dd_forwarder_existing_bucket_name
   dd_api_key_ssm_parameter_name     = var.dd_api_key_ssm_parameter_name
   dd_api_key_secret_arn             = var.dd_api_key_secret_arn == null ? try(aws_secretsmanager_secret.dd_api_key_secret[0].arn, null) : "${var.dd_api_key_secret_arn}*"
+  dd_allowed_kms_keys               = var.dd_allowed_kms_keys
   dd_fetch_lambda_tags              = var.dd_fetch_lambda_tags
   dd_fetch_step_functions_tags      = var.dd_fetch_step_functions_tags
   dd_fetch_log_group_tags           = var.dd_fetch_log_group_tags

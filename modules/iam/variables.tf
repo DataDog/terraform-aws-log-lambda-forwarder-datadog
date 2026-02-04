@@ -67,11 +67,6 @@ variable "dd_fetch_lambda_tags" {
   description = "Whether to fetch Lambda tags"
 }
 
-variable "dd_fetch_step_functions_tags" {
-  type        = bool
-  default     = null
-  description = "Whether to fetch Step Functions tags"
-}
 variable "dd_fetch_s3_tags" {
   type        = bool
   default     = null

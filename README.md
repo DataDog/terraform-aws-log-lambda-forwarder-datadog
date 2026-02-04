@@ -88,7 +88,6 @@ For complete usage examples demonstrating different configuration scenarios, see
 | dd_enrich_cloudwatch_tags    | Enrich logs from CloudWatch with log group tags via Datadog backend (requires Resource Collection enabled). Mutually exclusive with `dd_fetch_log_group_tags` | `bool` | `null`  |
 | dd_fetch_lambda_tags         | Fetch Lambda tags                                                                                                                                             | `bool` | `null`  |
 | dd_fetch_log_group_tags      | **(Deprecated in favor of dd_enrich_cloudwatch_tags)** Fetch Log Group tags                                                                                   | `bool` | `null`  |
-| dd_fetch_step_functions_tags | Fetch Step Functions tags                                                                                                                                     | `bool` | `null`  |
 | dd_fetch_s3_tags             | **(Deprecated in favor of dd_enrich_s3_tags)** Fetch S3 bucket tags                                                                                           | `bool` | `null`  |
 
 ### Log Processing

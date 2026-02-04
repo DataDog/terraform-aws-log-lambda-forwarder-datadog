@@ -4,18 +4,17 @@ provider "aws" {
 }
 
 variables {
-  dd_api_key                   = "test-api-key-value"
-  dd_site                      = "datadoghq.com"
-  dd_fetch_lambda_tags         = true
-  dd_fetch_log_group_tags      = true
-  dd_fetch_step_functions_tags = true
-  dd_fetch_s3_tags             = true
-  dd_store_failed_events       = true
-  dd_forward_log               = false
-  dd_trace_enabled             = false
-  memory_size                  = 2048
-  timeout                      = 300
-  layer_version                = "80"
+  dd_api_key              = "test-api-key-value"
+  dd_site                 = "datadoghq.com"
+  dd_fetch_lambda_tags    = true
+  dd_fetch_log_group_tags = true
+  dd_fetch_s3_tags        = true
+  dd_store_failed_events  = true
+  dd_forward_log          = false
+  dd_trace_enabled        = false
+  memory_size             = 2048
+  timeout                 = 300
+  layer_version           = "80"
 }
 
 run "enhanced_features_test" {
@@ -55,11 +54,6 @@ run "enhanced_features_env_vars_test" {
   assert {
     condition     = aws_lambda_function.forwarder.environment[0].variables.DD_FETCH_LOG_GROUP_TAGS == "true"
     error_message = "DD_FETCH_LOG_GROUP_TAGS should be true when enabled"
-  }
-
-  assert {
-    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_FETCH_STEP_FUNCTIONS_TAGS == "true"
-    error_message = "DD_FETCH_STEP_FUNCTIONS_TAGS should be true when enabled"
   }
 
   # Test trace and log forwarding configuration

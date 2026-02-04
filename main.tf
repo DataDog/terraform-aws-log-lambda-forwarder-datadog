@@ -18,7 +18,6 @@ module "iam" {
   dd_api_key_secret_arn             = var.dd_api_key_secret_arn == null ? try(aws_secretsmanager_secret.dd_api_key_secret[0].arn, null) : "${var.dd_api_key_secret_arn}*"
   dd_allowed_kms_keys               = var.dd_allowed_kms_keys
   dd_fetch_lambda_tags              = var.dd_fetch_lambda_tags
-  dd_fetch_step_functions_tags      = var.dd_fetch_step_functions_tags
   dd_fetch_log_group_tags           = var.dd_fetch_log_group_tags
   dd_fetch_s3_tags                  = var.dd_fetch_s3_tags
   dd_use_vpc                        = var.dd_use_vpc
@@ -209,7 +208,6 @@ resource "aws_lambda_function" "forwarder" {
         DD_FETCH_LAMBDA_TAGS            = var.dd_fetch_lambda_tags != null ? tostring(var.dd_fetch_lambda_tags) : null
         DD_FETCH_LOG_GROUP_TAGS         = var.dd_fetch_log_group_tags != null ? tostring(var.dd_fetch_log_group_tags) : null
         DD_FETCH_S3_TAGS                = var.dd_fetch_s3_tags != null ? tostring(var.dd_fetch_s3_tags) : null
-        DD_FETCH_STEP_FUNCTIONS_TAGS    = var.dd_fetch_step_functions_tags != null ? tostring(var.dd_fetch_step_functions_tags) : null
         DD_NO_SSL                       = var.dd_no_ssl
         DD_URL                          = var.dd_url
         DD_PORT                         = var.dd_port

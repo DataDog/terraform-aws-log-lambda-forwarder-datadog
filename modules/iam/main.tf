@@ -74,7 +74,7 @@ resource "aws_iam_role_policy" "forwarder_policy" {
         {
           Effect   = "Allow"
           Action   = ["s3:GetObject"]
-          Resource = "*"
+          Resource = var.dd_s3_log_bucket_arns
         }
       ],
 

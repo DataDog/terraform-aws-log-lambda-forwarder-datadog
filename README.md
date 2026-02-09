@@ -144,6 +144,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 | permissions_boundary_arn                | Permissions boundary ARN               | `string`       | `null`  |
 | tags_cache_ttl_seconds                  | Tags cache TTL in seconds              | `number`       | `300`   |
 | dd_allowed_kms_keys                     | Allow access to following KMS Key ARNs | `list(string)` | `["*"]` |
+| dd_s3_log_bucket_arns                   | S3 ARN patterns the forwarder is allowed to read logs from. **Warning:** restricting this may break automatic log subscription and forwarder execution for buckets not in the list. See [Restricting S3 Log Read Access](#restricting-s3-log-read-access). | `list(string)` | `["*"]` |
 | dd_forwarder_buckets_access_logs_target | Access logs target bucket              | `string`       | `null`  |
 
 ## Boolean Variable Behavior
@@ -195,7 +196,7 @@ See the [basic](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-da
 
 The forwarder Lambda function is granted the following permissions:
 
-- **S3**: Read access to all S3 objects for log processing
+- **S3**: Read access to all S3 objects for log processing (can be restricted with `dd_s3_log_bucket_arns`)
 - **S3**: Read/write access to the forwarder bucket for caching and failed events
 - **KMS**: Decrypt access for encrypted S3 buckets
 - **Secrets Manager**: Read access to the Datadog API key secret
@@ -204,6 +205,26 @@ The forwarder Lambda function is granted the following permissions:
 - **CloudWatch Logs**: Read access for log group tags (if enabled)
 - **VPC**: Network interface management (if VPC is enabled)
 - **Lambda**: Invoke additional target functions (if configured)
+
+### Restricting S3 Log Read Access
+
+By default, the forwarder IAM role grants `s3:GetObject` on all S3 buckets (`"*"`) so it can read logs from any bucket that triggers it. You can restrict this to specific buckets using `dd_s3_log_bucket_arns`:
+
+```hcl
+module "datadog_forwarder" {
+  source = "path/to/this/module"
+
+  dd_api_key = var.datadog_api_key
+  dd_site    = "datadoghq.com"
+
+  dd_s3_log_bucket_arns = [
+    "arn:aws:s3:::my-log-bucket/*",
+    "arn:aws:s3:::my-other-bucket/logs/*",
+  ]
+}
+```
+
+> **Warning:** Restricting `dd_s3_log_bucket_arns` may break [Datadog's automatic log subscription setup](#recommended-automatic-trigger-setup), since Datadog may subscribe the forwarder to S3 buckets that are not included in this list. It will also cause the forwarder to fail when processing logs from any bucket not covered by the provided ARN patterns. Only use this option if you manage your own triggers and know exactly which buckets will send logs to the forwarder.
 
 ### Using an Existing IAM Role
 

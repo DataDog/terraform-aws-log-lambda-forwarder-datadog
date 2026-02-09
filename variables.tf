@@ -18,6 +18,18 @@ variable "dd_allowed_kms_keys" {
   }
 }
 
+variable "dd_s3_log_bucket_arns" {
+  type        = list(string)
+  description = "List of S3 ARN patterns the forwarder is allowed to read logs from (e.g. [\"arn:aws:s3:::my-bucket/*\", \"arn:aws:s3:::other-bucket/prefix/*\"]). Defaults to [\"*\"] (all buckets). WARNING: Restricting this may break Datadog's automatic log subscription setup and the forwarder execution for buckets not included in this list."
+  default     = ["*"]
+  validation {
+    condition = alltrue([
+      for arn in var.dd_s3_log_bucket_arns : arn == "*" || can(regex("^arn:aws[a-z-]*:s3:::", arn))
+    ])
+    error_message = "All S3 log bucket ARNs must be valid S3 ARNs (starting with 'arn:aws:s3:::') or '*' for all buckets."
+  }
+}
+
 variable "dd_api_key_secret_arn" {
   type        = string
   default     = null

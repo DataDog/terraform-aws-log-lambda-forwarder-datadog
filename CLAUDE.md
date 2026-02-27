@@ -2,13 +2,20 @@
 
 ## Prerequisites
 
-- Terraform 1.9.x (uses native `terraform test` — avoid 1.10+ due to `lifecycle`-in-module restriction)
-- `tfenv` recommended: `brew install tfenv && tfenv install 1.9.8 && tfenv use 1.9.8`
+- Terraform 1.9.x (`tfenv` recommended — see note on version compatibility below)
 - AWS credentials required for `command = apply` tests and live examples
 - Plan-only tests in `create_api_key_secret_flag.tftest.hcl` use `mock_provider` and run without credentials
 
-> **Note on `OTEL_TRACES_EXPORTER`:** If you see `Could not initialize telemetry` errors, unset
-> the variable: `unset OTEL_TRACES_EXPORTER`
+```bash
+brew install tfenv && tfenv install 1.9.8 && tfenv use 1.9.8
+```
+
+> **Terraform version compatibility:** The module requires `>= 1.9` (native test framework).
+> Terraform 1.12 introduced stricter sensitive-output validation that the current `outputs.tf`
+> doesn't satisfy — use 1.9.x for local testing until that is addressed.
+
+> **`OTEL_TRACES_EXPORTER` note:** If you see `Could not initialize telemetry` errors, run
+> `unset OTEL_TRACES_EXPORTER` before running Terraform commands.
 
 ---
 
@@ -17,27 +24,24 @@
 All tests live in `tests/` and use [Terraform's native test framework](https://developer.hashicorp.com/terraform/language/tests).
 
 ```bash
-# Run all tests (mix of plan-only and apply tests)
+# Run all tests
 TFENV_TERRAFORM_VERSION=1.9.8 terraform test
 
-# Fast path: credential-free unit tests for the issue #8 fix (mock_provider)
-TFENV_TERRAFORM_VERSION=1.9.8 terraform test -filter=tests/create_api_key_secret_flag.tftest.hcl
-
-# Single test file
-TFENV_TERRAFORM_VERSION=1.9.8 terraform test -filter=tests/default_config.tftest.hcl
+# Run a single test file
+TFENV_TERRAFORM_VERSION=1.9.8 terraform test -filter=tests/<file>.tftest.hcl
 ```
 
-> **Note:** Most tests require AWS credentials because the AWS provider validates credentials
-> during initialization — even for `command = plan`. The exception is
+> **Credentials:** Most tests require AWS credentials because the AWS provider validates
+> credentials during initialization, even for `command = plan`. The exception is
 > `create_api_key_secret_flag.tftest.hcl`, which uses `mock_provider "aws"`.
 
 ---
 
-## Test files and what they cover
+## Test files
 
 | File | Mode | Credentials needed | What it tests |
 |---|---|---|---|
-| `create_api_key_secret_flag.tftest.hcl` | plan | **No** (mock_provider) | **`create_dd_api_key_secret` flag** — all scenarios for issue #8 fix |
+| `create_api_key_secret_flag.tftest.hcl` | plan | **No** (mock_provider) | `create_dd_api_key_secret` flag — all variable scenarios and validation rules |
 | `default_config.tftest.hcl` | plan + apply | Yes | Default variable values, Lambda config, IAM, CloudWatch |
 | `existing_resources.tftest.hcl` | plan | Yes | Using pre-existing IAM role, S3 bucket, and secret ARN |
 | `enhanced_features.tftest.hcl` | plan + apply | Yes | Tag fetching, S3 bucket creation, layer version pinning |
@@ -50,75 +54,37 @@ TFENV_TERRAFORM_VERSION=1.9.8 terraform test -filter=tests/default_config.tftest
 
 ---
 
-## Testing the issue #8 fix (Invalid count argument)
+## Live examples
 
-The bug manifests when `dd_api_key_secret_arn` is set to an ARN that comes from a resource
-created in the **same Terraform plan** — the value is unknown at plan time, causing:
-
-```
-Error: Invalid count argument
-The "count" value depends on resource attributes that cannot be determined until apply
-```
-
-### Fast path: unit tests (no AWS needed)
+`examples/` contains deployable root modules for manual end-to-end testing:
 
 ```bash
-unset OTEL_TRACES_EXPORTER
-TFENV_TERRAFORM_VERSION=1.9.8 terraform test -filter=tests/create_api_key_secret_flag.tftest.hcl
-```
-
-This runs 9 plan-only tests (all pass without real credentials) covering:
-- `create_dd_api_key_secret = false` with `dd_api_key_secret_arn`
-- `create_dd_api_key_secret = false` with `dd_api_key_ssm_parameter_name`
-- `create_dd_api_key_secret = true` explicit
-- Automatic detection (null flag) — backward compatibility
-- Validation failures for invalid configurations
-
-### Full reproduction: live example (AWS credentials required)
-
-`examples/external-secret/` is a minimal root module that reproduces the exact bug scenario:
-it creates an `aws_secretsmanager_secret` and passes its ARN to the forwarder module in the
-same plan, which is what triggered the original error.
-
-```bash
-cd examples/external-secret
-
+cd examples/<name>
 export TF_VAR_datadog_api_key="your-api-key"
-
-# This should succeed on the fixed branch, and fail with "Invalid count argument"
-# if you revert the create_dd_api_key_secret changes to main.tf / data.tf
-terraform init
-terraform plan
-
-# Optional: actually deploy
-terraform apply
+terraform init && terraform plan
+terraform apply   # optional — creates real AWS resources
 terraform destroy
 ```
 
-### Manually reproducing the original bug
-
-To confirm the fix is necessary, revert `local.should_create_secret` in `data.tf` to the
-original expression and re-run `terraform plan` in `examples/external-secret/`:
-
-```hcl
-# data.tf — original (broken) expression:
-should_create_secret = var.dd_api_key_secret_arn == null && var.dd_api_key_ssm_parameter_name == null
-```
-
-`terraform plan` will immediately fail with the "Invalid count argument" error.
+| Directory | What it demonstrates |
+|---|---|
+| `basic/` | Minimal setup — API key via `dd_api_key` |
+| `vpc/` | VPC deployment |
+| `multi-region/` | Multi-region deployment |
+| `external-secret/` | Secret created in the same plan, ARN passed to module |
 
 ---
 
 ## Adding new tests
 
 1. Create `tests/<scenario>.tftest.hcl`
-2. Use `command = plan` with `mock_provider "aws"` to run without credentials (see `create_api_key_secret_flag.tftest.hcl` as a template)
-3. Always set `region = "us-east-1"` in the top-level `variables {}` block when using mocks — this bypasses `data.aws_region.current` which returns a random string from the mock provider
-4. Use `override_data { target = data.http.github_releases; values = { response_body = "..." } }` in each `run` block to mock the GitHub releases API call (must be a raw JSON string — `jsonencode()` is not allowed in `override_data` values)
+2. Use `command = plan` with `mock_provider "aws"` to run without credentials (see template below)
+3. Always set `region = "us-east-1"` in the top-level `variables {}` block when using `mock_provider` — this bypasses `data.aws_region.current` which otherwise returns a random mock string
+4. Use `override_data` to mock the GitHub releases HTTP call in each `run` block — values must be raw JSON strings (`jsonencode()` is not allowed in `override_data`)
 5. Use `expect_failures = [var.foo]` to assert that validation rules reject bad input
-6. Use `command = apply` only when you need to assert on computed values (e.g. env var values that reference created resource IDs) — these require real AWS credentials
+6. Use `command = apply` only when asserting on computed values (e.g. env var values referencing created resource IDs) — requires real AWS credentials
 
-### Minimal credential-free template
+### Credential-free test template
 
 ```hcl
 mock_provider "aws" {

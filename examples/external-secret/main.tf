@@ -51,6 +51,7 @@ module "datadog_forwarder" {
   create_dd_api_key_secret = false
 
   function_name = var.function_name
+  region        = var.aws_region
 
   tags = {
     example   = "external-secret"

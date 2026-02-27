@@ -54,9 +54,9 @@ run "explicit_false_with_secret_arn" {
   }
 
   override_data {
-    target = data.http.github_releases
+    target = data.http.forwarder_versions
     values = {
-      response_body = "[{\"name\":\"aws-dd-forwarder-5.1.0 (Layer v92)\",\"tag_name\":\"aws-dd-forwarder-5.1.0\"}]"
+      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 
@@ -83,9 +83,9 @@ run "explicit_false_with_ssm_parameter" {
   }
 
   override_data {
-    target = data.http.github_releases
+    target = data.http.forwarder_versions
     values = {
-      response_body = "[{\"name\":\"aws-dd-forwarder-5.1.0 (Layer v92)\",\"tag_name\":\"aws-dd-forwarder-5.1.0\"}]"
+      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 
@@ -107,9 +107,9 @@ run "explicit_true_creates_secret" {
   }
 
   override_data {
-    target = data.http.github_releases
+    target = data.http.forwarder_versions
     values = {
-      response_body = "[{\"name\":\"aws-dd-forwarder-5.1.0 (Layer v92)\",\"tag_name\":\"aws-dd-forwarder-5.1.0\"}]"
+      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 
@@ -131,9 +131,9 @@ run "null_flag_auto_creates_secret_from_api_key" {
   }
 
   override_data {
-    target = data.http.github_releases
+    target = data.http.forwarder_versions
     values = {
-      response_body = "[{\"name\":\"aws-dd-forwarder-5.1.0 (Layer v92)\",\"tag_name\":\"aws-dd-forwarder-5.1.0\"}]"
+      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 
@@ -152,9 +152,9 @@ run "null_flag_auto_skips_secret_with_external_arn" {
   }
 
   override_data {
-    target = data.http.github_releases
+    target = data.http.forwarder_versions
     values = {
-      response_body = "[{\"name\":\"aws-dd-forwarder-5.1.0 (Layer v92)\",\"tag_name\":\"aws-dd-forwarder-5.1.0\"}]"
+      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 

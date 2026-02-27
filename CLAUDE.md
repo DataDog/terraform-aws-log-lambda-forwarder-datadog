@@ -112,9 +112,9 @@ run "my_scenario" {
   }
 
   override_data {
-    target = data.http.github_releases
+    target = data.http.forwarder_versions
     values = {
-      response_body = "[{\"name\":\"aws-dd-forwarder-5.1.0 (Layer v92)\",\"tag_name\":\"aws-dd-forwarder-5.1.0\"}]"
+      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 

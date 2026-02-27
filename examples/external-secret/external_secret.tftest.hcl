@@ -24,9 +24,9 @@ run "external_secret_plan_succeeds" {
   command = plan
 
   override_data {
-    target = module.datadog_forwarder.data.http.github_releases
+    target = module.datadog_forwarder.data.http.forwarder_versions
     values = {
-      response_body = "[{\"name\":\"aws-dd-forwarder-5.1.0 (Layer v92)\",\"tag_name\":\"aws-dd-forwarder-5.1.0\"}]"
+      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 

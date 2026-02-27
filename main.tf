@@ -24,20 +24,6 @@ module "iam" {
   dd_fetch_s3_tags                  = var.dd_fetch_s3_tags
   dd_use_vpc                        = var.dd_use_vpc
   additional_target_lambda_arns     = var.additional_target_lambda_arns != null ? split(",", var.additional_target_lambda_arns) : []
-
-  lifecycle {
-    precondition {
-      condition     = local.has_external_secret_reference || local.is_using_auto_secret_creation
-      error_message = <<-EOT
-        API key configuration missing.
-
-        You must provide ONE of the following:
-        - dd_api_key (module will create secret automatically)
-        - dd_api_key_secret_arn (reference to existing Secrets Manager secret)
-        - dd_api_key_ssm_parameter_name (reference to existing SSM parameter)
-      EOT
-    }
-  }
 }
 
 # Secrets Manager secret for Datadog API key

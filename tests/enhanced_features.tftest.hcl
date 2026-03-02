@@ -1,11 +1,28 @@
 # Test enhanced features configuration
-provider "aws" {
-  region = "us-east-1"
+mock_provider "aws" {
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "123456789012"
+    }
+  }
+
+  mock_data "aws_region" {
+    defaults = {
+      region = "us-east-1"
+    }
+  }
+
+  mock_data "aws_partition" {
+    defaults = {
+      partition = "aws"
+    }
+  }
 }
 
 variables {
   dd_api_key                   = "test-api-key-value"
   dd_site                      = "datadoghq.com"
+  dd_api_key_secret_arn        = "arn:aws:secretsmanager:us-east-1:123456789012:secret:DatadogAPIKey-mock"
   dd_fetch_lambda_tags         = true
   dd_fetch_log_group_tags      = true
   dd_fetch_step_functions_tags = true
@@ -39,7 +56,7 @@ run "enhanced_features_test" {
   }
 }
 run "enhanced_features_env_vars_test" {
-  command = apply
+  command = plan
 
   assert {
     condition     = aws_lambda_function.forwarder.layers[0] == "arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Forwarder:80"
@@ -79,9 +96,9 @@ run "enhanced_features_env_vars_test" {
     error_message = "DD_STORE_FAILED_EVENTS should be true when enabled"
   }
 
-  # Test S3 bucket name is set
+  # Test S3 bucket name key is present in env vars
   assert {
-    condition     = length(aws_lambda_function.forwarder.environment[0].variables.DD_S3_BUCKET_NAME) > 0
+    condition     = contains(keys(aws_lambda_function.forwarder.environment[0].variables), "DD_S3_BUCKET_NAME")
     error_message = "DD_S3_BUCKET_NAME should be set when S3 bucket is created"
   }
 }

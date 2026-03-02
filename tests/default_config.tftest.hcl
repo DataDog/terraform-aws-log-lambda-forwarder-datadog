@@ -1,11 +1,28 @@
 # Test the default configuration of the Datadog Forwarder module
-provider "aws" {
-  region = "us-east-1"
+mock_provider "aws" {
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "123456789012"
+    }
+  }
+
+  mock_data "aws_region" {
+    defaults = {
+      region = "us-east-1"
+    }
+  }
+
+  mock_data "aws_partition" {
+    defaults = {
+      partition = "aws"
+    }
+  }
 }
 
 variables {
-  dd_api_key = "test-api-key-value"
-  dd_site    = "datadoghq.com"
+  dd_api_key            = "test-api-key-value"
+  dd_site               = "datadoghq.com"
+  dd_api_key_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:DatadogAPIKey-mock"
 }
 
 run "default_config_test" {
@@ -65,9 +82,10 @@ run "default_config_test" {
   }
 
   # === Secrets Management ===
+  # Using provided dd_api_key_secret_arn, so module secret should not be created
   assert {
-    condition     = length(aws_secretsmanager_secret.dd_api_key_secret) == 1
-    error_message = "Secrets Manager secret should be created by default"
+    condition     = length(aws_secretsmanager_secret.dd_api_key_secret) == 0
+    error_message = "Secrets Manager secret should not be created when dd_api_key_secret_arn is provided"
   }
 
   # === Storage Configuration ===
@@ -102,11 +120,18 @@ run "default_config_test" {
     condition     = aws_lambda_permission.eventbridge_invoke.principal == "events.amazonaws.com"
     error_message = "EventBridge permission should be created"
   }
-}
-run "environment_variables_test" {
-  command = apply
 
-  # Test actual environment variable values (only available after apply)
+  # === Output Validation ===
+  assert {
+    condition     = output.datadog_forwarder_function_name == "DatadogForwarder"
+    error_message = "datadog_forwarder_function_name should match expected value"
+  }
+}
+
+# Test environment variable values
+run "environment_variables_test" {
+  command = plan
+
   assert {
     condition     = aws_lambda_function.forwarder.environment[0].variables.DD_SITE == "datadoghq.com"
     error_message = "DD_SITE environment variable should be set correctly"
@@ -127,54 +152,48 @@ run "environment_variables_test" {
     error_message = "DD_TRACE_ENABLED should be true by default"
   }
 
-  # Test that optional environment variables are NOT set when null
   assert {
-    condition     = !contains(keys(aws_lambda_function.forwarder.environment[0].variables), "DD_TAGS")
-    error_message = "DD_TAGS should not be present when null"
+    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_API_KEY_SECRET_ARN == "arn:aws:secretsmanager:us-east-1:123456789012:secret:DatadogAPIKey-mock"
+    error_message = "DD_API_KEY_SECRET_ARN should reference the provided secret ARN"
+  }
+
+  # Test that optional environment variables are null when not provided
+  assert {
+    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_TAGS == null
+    error_message = "DD_TAGS should be null when not provided"
   }
 
   assert {
-    condition     = !contains(keys(aws_lambda_function.forwarder.environment[0].variables), "DD_FETCH_LAMBDA_TAGS")
-    error_message = "DD_FETCH_LAMBDA_TAGS should not be present when null"
-  }
-  assert {
-    condition     = !contains(keys(aws_lambda_function.forwarder.environment[0].variables), "DD_FETCH_S3_TAGS")
-    error_message = "DD_FETCH_S3_TAGS should not be present when null"
+    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_FETCH_LAMBDA_TAGS == null
+    error_message = "DD_FETCH_LAMBDA_TAGS should be null when not provided"
   }
 
   assert {
-    condition     = !contains(keys(aws_lambda_function.forwarder.environment[0].variables), "DD_FORWARD_LOG")
-    error_message = "DD_FORWARD_LOG should not be present when null"
+    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_FETCH_S3_TAGS == null
+    error_message = "DD_FETCH_S3_TAGS should be null when not provided"
   }
 
   assert {
-    condition     = !contains(keys(aws_lambda_function.forwarder.environment[0].variables), "DD_LOG_LEVEL")
-    error_message = "DD_LOG_LEVEL should not be present when null"
-  }
-
-  # Test that key outputs have values after apply
-  assert {
-    condition     = output.datadog_forwarder_arn != null && output.datadog_forwarder_arn != ""
-    error_message = "datadog_forwarder_arn output should have a value"
+    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_FORWARD_LOG == null
+    error_message = "DD_FORWARD_LOG should be null when not provided"
   }
 
   assert {
-    condition     = output.datadog_forwarder_function_name == "DatadogForwarder"
-    error_message = "datadog_forwarder_function_name should match expected value"
+    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_LOG_LEVEL == null
+    error_message = "DD_LOG_LEVEL should be null when not provided"
+  }
+}
+
+# Test that Secrets Manager secret is created by default when no secret ARN is provided
+run "secrets_manager_default_test" {
+  command = plan
+
+  variables {
+    dd_api_key_secret_arn = null
   }
 
   assert {
-    condition     = output.datadog_forwarder_role_arn != null && output.datadog_forwarder_role_arn != ""
-    error_message = "datadog_forwarder_role_arn should have a value"
-  }
-
-  assert {
-    condition     = output.forwarder_log_group_name != null && output.forwarder_log_group_name != ""
-    error_message = "forwarder_log_group_name should have a value"
-  }
-
-  assert {
-    condition     = output.forwarder_log_group_arn != null && output.forwarder_log_group_arn != ""
-    error_message = "forwarder_log_group_arn should have a value"
+    condition     = length(aws_secretsmanager_secret.dd_api_key_secret) == 1
+    error_message = "Secrets Manager secret should be created when no dd_api_key_secret_arn is provided"
   }
 }

@@ -1,6 +1,22 @@
 # Test VPC configuration of the Datadog Forwarder module
-provider "aws" {
-  region = "us-east-1"
+mock_provider "aws" {
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "123456789012"
+    }
+  }
+
+  mock_data "aws_region" {
+    defaults = {
+      region = "us-east-1"
+    }
+  }
+
+  mock_data "aws_partition" {
+    defaults = {
+      partition = "aws"
+    }
+  }
 }
 
 variables {

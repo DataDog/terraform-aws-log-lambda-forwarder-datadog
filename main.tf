@@ -15,7 +15,7 @@ module "iam" {
   forwarder_bucket_arn              = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].arn : null
   dd_forwarder_existing_bucket_name = var.dd_forwarder_existing_bucket_name
   dd_api_key_ssm_parameter_name     = var.dd_api_key_ssm_parameter_name
-  dd_api_key_secret_arn             = var.dd_api_key_secret_arn == null ? try(aws_secretsmanager_secret.dd_api_key_secret[0].arn, null) : "${var.dd_api_key_secret_arn}*"
+  dd_api_key_secret_arn             = local.effective_secret_arn != null ? "${local.effective_secret_arn}*" : null
   dd_allowed_kms_keys               = var.dd_allowed_kms_keys
   dd_s3_log_bucket_arns             = var.dd_s3_log_bucket_arns
   dd_fetch_lambda_tags              = var.dd_fetch_lambda_tags
@@ -28,7 +28,7 @@ module "iam" {
 
 # Secrets Manager secret for Datadog API key
 resource "aws_secretsmanager_secret" "dd_api_key_secret" {
-  count = var.dd_api_key_secret_arn == null && var.dd_api_key_ssm_parameter_name == null ? 1 : 0
+  count = local.should_create_secret ? 1 : 0
 
   region = local.region
 
@@ -37,15 +37,54 @@ resource "aws_secretsmanager_secret" "dd_api_key_secret" {
   description = "Datadog API Key"
 
   tags = var.tags
+
+  lifecycle {
+    precondition {
+      condition     = var.dd_api_key != null
+      error_message = <<-EOT
+        Cannot create Secrets Manager secret: dd_api_key is not provided.
+
+        You must provide ONE of the following:
+        - dd_api_key (module will create secret automatically)
+        - dd_api_key_secret_arn (reference to existing Secrets Manager secret)
+        - dd_api_key_ssm_parameter_name (reference to existing SSM parameter)
+      EOT
+    }
+
+    precondition {
+      condition     = !local.has_external_secret_reference
+      error_message = <<-EOT
+        Configuration conflict: You provided dd_api_key along with an external secret reference.
+
+        Current configuration:
+        - dd_api_key: SET
+        - dd_api_key_secret_arn: ${var.dd_api_key_secret_arn != null ? "SET" : "NOT SET"}
+        - dd_api_key_ssm_parameter_name: ${var.dd_api_key_ssm_parameter_name != null ? "SET" : "NOT SET"}
+
+        Choose ONE approach:
+        1. Use dd_api_key alone (module creates secret)
+        2. Create secret externally and use dd_api_key_secret_arn or dd_api_key_ssm_parameter_name (without dd_api_key)
+
+        If creating the secret externally, set create_dd_api_key_secret = false.
+      EOT
+    }
+  }
 }
 
 resource "aws_secretsmanager_secret_version" "dd_api_key_secret_version" {
-  count = var.dd_api_key_secret_arn == null && var.dd_api_key_ssm_parameter_name == null ? 1 : 0
+  count = local.should_create_secret ? 1 : 0
 
   region = local.region
 
   secret_id     = aws_secretsmanager_secret.dd_api_key_secret[0].id
   secret_string = var.dd_api_key
+
+  lifecycle {
+    precondition {
+      condition     = var.dd_api_key != null && var.dd_api_key != ""
+      error_message = "dd_api_key must be a non-empty string when creating a secret automatically."
+    }
+  }
 }
 
 # S3 bucket for the forwarder (if needed)
@@ -195,7 +234,7 @@ resource "aws_lambda_function" "forwarder" {
       var.dd_api_key_ssm_parameter_name != null ? {
         DD_API_KEY_SSM_NAME = var.dd_api_key_ssm_parameter_name
         } : {
-        DD_API_KEY_SECRET_ARN = var.dd_api_key_secret_arn == null ? aws_secretsmanager_secret.dd_api_key_secret[0].arn : var.dd_api_key_secret_arn
+        DD_API_KEY_SECRET_ARN = local.effective_secret_arn
       },
       # S3 bucket name
       local.create_s3_bucket || var.dd_forwarder_existing_bucket_name != null ? {
@@ -241,6 +280,31 @@ resource "aws_lambda_function" "forwarder" {
   }
 
   tags = local.tags_with_version
+
+  lifecycle {
+    precondition {
+      condition     = local.has_external_secret_reference || local.is_using_auto_secret_creation
+      error_message = <<-EOT
+        Lambda function requires Datadog API key configuration.
+
+        You must provide ONE of the following:
+        - dd_api_key (module will create secret automatically)
+        - dd_api_key_secret_arn (reference to existing Secrets Manager secret)
+        - dd_api_key_ssm_parameter_name (reference to existing SSM parameter)
+
+        If you are creating a secret or parameter in the same Terraform plan,
+        set create_dd_api_key_secret = false.
+      EOT
+    }
+
+    precondition {
+      condition = (
+        var.dd_api_key_ssm_parameter_name != null ||
+        local.effective_secret_arn != null
+      )
+      error_message = "Internal error: Secret ARN could not be determined. This is likely a module bug."
+    }
+  }
 }
 
 # Lambda permissions

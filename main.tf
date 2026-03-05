@@ -65,7 +65,7 @@ resource "aws_secretsmanager_secret" "dd_api_key_secret" {
         1. Use dd_api_key alone (module creates secret)
         2. Create secret externally and use dd_api_key_secret_arn or dd_api_key_ssm_parameter_name (without dd_api_key)
 
-        If you're creating the secret in the same Terraform plan, set create_dd_api_key_secret = false.
+        If creating the secret externally, set create_dd_api_key_secret = false.
       EOT
     }
   }
@@ -292,10 +292,8 @@ resource "aws_lambda_function" "forwarder" {
         - dd_api_key_secret_arn (reference to existing Secrets Manager secret)
         - dd_api_key_ssm_parameter_name (reference to existing SSM parameter)
 
-        ERROR HINT: If you're seeing "Invalid count argument" errors, you may be creating
-        a secret/parameter in the same Terraform plan and passing its ARN to this module.
-
-        Solution: Set create_dd_api_key_secret = false when using secrets created in the same plan.
+        If you are creating a secret or parameter in the same Terraform plan,
+        set create_dd_api_key_secret = false.
       EOT
     }
 

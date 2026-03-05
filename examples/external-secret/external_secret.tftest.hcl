@@ -1,7 +1,5 @@
 # Validates the external-secret pattern: a secret created in the same plan whose ARN
 # (unknown at plan time) is passed to the forwarder module via create_dd_api_key_secret=false.
-#
-# This is the exact scenario that triggered "Invalid count argument" before the fix.
 
 mock_provider "aws" {
   mock_data "aws_caller_identity" {

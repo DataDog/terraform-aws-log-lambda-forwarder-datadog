@@ -43,12 +43,8 @@ variable "dd_api_key_secret_arn" {
     The ARN of an existing secret storing the Datadog API key in AWS Secrets Manager.
     The secret must be stored as plaintext, not as a key-value pair.
 
-    IMPORTANT: If you're creating this secret in the same Terraform plan, you'll encounter
-    "Invalid count argument" errors. Solutions:
-    1. Set create_dd_api_key_secret = false (recommended for same-plan creation)
-    2. Create the secret in a separate Terraform state/plan
-    3. Use a data source to reference a pre-existing secret
-    4. Consider using dd_api_key instead (module creates secret automatically)
+    If the secret is created in the same Terraform plan, set create_dd_api_key_secret = false
+    so the module knows not to create its own secret.
 
     NOTE: Do not use this with dd_api_key or dd_api_key_ssm_parameter_name.
   EOT
@@ -65,12 +61,8 @@ variable "dd_api_key_ssm_parameter_name" {
   description = <<-EOT
     The name of an existing SSM Parameter Store parameter containing the Datadog API key.
 
-    IMPORTANT: If you're creating this parameter in the same Terraform plan, you'll encounter
-    "Invalid count argument" errors. Solutions:
-    1. Set create_dd_api_key_secret = false (recommended for same-plan creation)
-    2. Create the parameter in a separate Terraform state/plan
-    3. Use a data source to reference a pre-existing parameter
-    4. Consider using dd_api_key instead (module creates secret automatically)
+    If the parameter is created in the same Terraform plan, set create_dd_api_key_secret = false
+    so the module knows not to create its own secret.
 
     NOTE: Do not use this with dd_api_key or dd_api_key_secret_arn.
     When set, this takes precedence over secret-based configuration.
@@ -91,7 +83,7 @@ variable "create_dd_api_key_secret" {
     - false: Do not create secret (requires dd_api_key_secret_arn or dd_api_key_ssm_parameter_name)
     - null (default): Automatic behavior - create secret only if neither dd_api_key_secret_arn nor dd_api_key_ssm_parameter_name is provided
 
-    Set this to false when using secrets/parameters created in the same Terraform plan to avoid "Invalid count argument" errors.
+    Set this to false when using secrets or parameters created in the same Terraform plan.
   EOT
 
   validation {

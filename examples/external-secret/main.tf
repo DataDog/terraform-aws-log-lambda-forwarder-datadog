@@ -14,22 +14,15 @@ provider "aws" {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# This example reproduces the scenario from issue #8:
+# This example demonstrates creating a Secrets Manager secret in the same
+# Terraform plan and passing its ARN to the forwarder module.
 #
-#   "Invalid count argument" when dd_api_key_secret_arn is set to a reference
-#   from a resource created in the SAME Terraform plan.
-#
-# Before the fix, this would fail at `terraform plan` with:
-#   Error: Invalid count argument
-#   The "count" value depends on resource attributes that cannot be determined
-#   until apply, so Terraform cannot predict how many instances will be created.
-#
-# The fix: set create_dd_api_key_secret = false so the module knows at plan
-# time not to create its own secret, bypassing the unknown-value problem.
+# When the secret is created in the same plan, its ARN is unknown at plan time.
+# Setting create_dd_api_key_secret = false tells the module not to create its
+# own secret, allowing Terraform to resolve the plan without issues.
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Secret created in the SAME Terraform plan as the forwarder module.
-# Its ARN is unknown at plan time — this is exactly what triggered the bug.
+# Secret created in the same Terraform plan as the forwarder module.
 resource "aws_secretsmanager_secret" "dd_api_key" {
   name_prefix = "datadog-api-key-"
   description = "Datadog API key managed externally by the caller"
@@ -45,8 +38,8 @@ module "datadog_forwarder" {
 
   dd_site = var.datadog_site
 
-  # Pass the ARN from the resource above — this value is UNKNOWN at plan time.
-  # Without create_dd_api_key_secret = false this caused "Invalid count argument".
+  # Pass the ARN from the resource above — its value is unknown at plan time.
+  # Setting create_dd_api_key_secret = false tells the module to skip secret creation.
   dd_api_key_secret_arn    = aws_secretsmanager_secret.dd_api_key.arn
   create_dd_api_key_secret = false
 

@@ -1,12 +1,4 @@
-# Tests for the create_dd_api_key_secret flag (fixes: Invalid count argument error, issue #8)
-#
-# The bug: when dd_api_key_secret_arn is set to a reference from a resource created in the
-# same Terraform plan, the value is "unknown" at plan time. The old count expression:
-#   count = var.dd_api_key_secret_arn == null ? 1 : 0
-# cannot be evaluated when the value is unknown, causing "Invalid count argument".
-#
-# The fix: add create_dd_api_key_secret boolean flag to make this decision explicit at
-# plan time, bypassing the unknown-value problem entirely.
+# Tests for the create_dd_api_key_secret flag.
 #
 # All tests here use mock_provider + override_data so they run without real AWS credentials.
 
@@ -39,11 +31,7 @@ variables {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Scenario 1: explicit flag=false with dd_api_key_secret_arn (the main fix)
-#
-# Simulates the case where the secret ARN comes from a resource in the same plan.
-# With the flag set explicitly, the count decision is made at plan time without
-# evaluating the ARN value — bypassing the "Invalid count argument" error.
+# Scenario 1: explicit flag=false with dd_api_key_secret_arn
 # ─────────────────────────────────────────────────────────────────────────────
 run "explicit_false_with_secret_arn" {
   command = plan

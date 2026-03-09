@@ -53,11 +53,11 @@ run "custom_s3_log_access_restricts_buckets" {
   }
 
   variables {
-    function_name         = "TestForwarder"
-    iam_role_path         = "/"
-    partition             = "aws"
-    region                = "us-east-1"
-    account_id            = "123456789012"
+    function_name = "TestForwarder"
+    iam_role_path = "/"
+    partition     = "aws"
+    region        = "us-east-1"
+    account_id    = "123456789012"
     dd_s3_log_bucket_arns = [
       "arn:aws:s3:::my-log-bucket/*",
       "arn:aws:s3:::my-other-bucket/logs/*",

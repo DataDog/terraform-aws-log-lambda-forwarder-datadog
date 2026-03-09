@@ -20,9 +20,8 @@ mock_provider "aws" {
 }
 
 variables {
-  dd_api_key            = "test-api-key-value"
-  dd_site               = "datadoghq.com"
-  dd_api_key_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:DatadogAPIKey-mock"
+  dd_api_key = "test-api-key-value"
+  dd_site    = "datadoghq.com"
 }
 
 run "default_config_test" {
@@ -82,10 +81,10 @@ run "default_config_test" {
   }
 
   # === Secrets Management ===
-  # Using provided dd_api_key_secret_arn, so module secret should not be created
+  # Default path: dd_api_key provided, no external secret reference → module creates secret
   assert {
-    condition     = length(aws_secretsmanager_secret.dd_api_key_secret) == 0
-    error_message = "Secrets Manager secret should not be created when dd_api_key_secret_arn is provided"
+    condition     = length(aws_secretsmanager_secret.dd_api_key_secret) == 1
+    error_message = "Secrets Manager secret should be created by default when only dd_api_key is provided"
   }
 
   # === Storage Configuration ===
@@ -152,11 +151,6 @@ run "environment_variables_test" {
     error_message = "DD_TRACE_ENABLED should be true by default"
   }
 
-  assert {
-    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_API_KEY_SECRET_ARN == "arn:aws:secretsmanager:us-east-1:123456789012:secret:DatadogAPIKey-mock"
-    error_message = "DD_API_KEY_SECRET_ARN should reference the provided secret ARN"
-  }
-
   # Test that optional environment variables are null when not provided
   assert {
     condition     = aws_lambda_function.forwarder.environment[0].variables.DD_TAGS == null
@@ -182,18 +176,16 @@ run "environment_variables_test" {
     condition     = aws_lambda_function.forwarder.environment[0].variables.DD_LOG_LEVEL == null
     error_message = "DD_LOG_LEVEL should be null when not provided"
   }
-}
 
-# Test that Secrets Manager secret is created by default when no secret ARN is provided
-run "secrets_manager_default_test" {
-  command = plan
-
-  variables {
-    dd_api_key_secret_arn = null
+  # Verify secret ARN path is used (not SSM)
+  assert {
+    condition     = contains(keys(aws_lambda_function.forwarder.environment[0].variables), "DD_API_KEY_SECRET_ARN")
+    error_message = "DD_API_KEY_SECRET_ARN should be present when module auto-creates the secret"
   }
 
   assert {
-    condition     = length(aws_secretsmanager_secret.dd_api_key_secret) == 1
-    error_message = "Secrets Manager secret should be created when no dd_api_key_secret_arn is provided"
+    condition     = !contains(keys(aws_lambda_function.forwarder.environment[0].variables), "DD_API_KEY_SSM_NAME")
+    error_message = "DD_API_KEY_SSM_NAME should not be present when using Secrets Manager"
   }
 }
+

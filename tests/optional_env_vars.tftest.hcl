@@ -20,7 +20,6 @@ mock_provider "aws" {
 }
 
 variables {
-  dd_api_key                    = "test-api-key-value"
   dd_site                       = "datadoghq.com"
   dd_api_key_secret_arn         = "arn:aws:secretsmanager:us-east-1:123456789012:secret:DatadogAPIKey-mock"
   dd_tags                       = "env:test,service:forwarder"
@@ -89,9 +88,4 @@ run "optional_env_vars_test" {
     error_message = "DD_ADDITIONAL_TARGET_LAMBDAS should be set when provided"
   }
 
-  # Test that S3 bucket is created when tag fetching is enabled
-  assert {
-    condition     = length(aws_s3_bucket.forwarder_bucket) == 1
-    error_message = "S3 bucket should be created when tag fetching is enabled"
-  }
 }

@@ -25,8 +25,7 @@ run "auto_create_secret_test" {
   command = plan
 
   variables {
-    dd_api_key            = "test-api-key-value"
-    dd_api_key_secret_arn = null
+    dd_api_key = "test-api-key-value"
   }
 
   # Secret resources should be created
@@ -102,8 +101,6 @@ run "ssm_parameter_test" {
   command = plan
 
   variables {
-    dd_api_key                    = null
-    dd_api_key_secret_arn         = null
     dd_api_key_ssm_parameter_name = "/datadog/api-key"
   }
 
@@ -142,7 +139,6 @@ run "explicit_no_create_secret_test" {
   command = plan
 
   variables {
-    dd_api_key               = null
     dd_api_key_secret_arn    = "arn:aws:secretsmanager:us-east-1:123456789012:secret:ExternalSecret-abc123"
     create_dd_api_key_secret = false
   }

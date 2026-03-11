@@ -213,11 +213,13 @@ run "invalid_ssm_parameter_name_fails_validation" {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Scenario 6: mutual exclusivity — conflicting API key configurations rejected
+# Scenario 6: mutual exclusivity — conflicting API key configurations warn
+# These are deprecation warnings (check blocks) that will become hard errors
+# in a future major release.
 # ─────────────────────────────────────────────────────────────────────────────
 
-# dd_api_key + dd_api_key_secret_arn should fail
-run "api_key_and_secret_arn_conflict_fails_validation" {
+# dd_api_key + dd_api_key_secret_arn should warn
+run "api_key_and_secret_arn_conflict_warns" {
   command = plan
 
   variables {
@@ -226,12 +228,12 @@ run "api_key_and_secret_arn_conflict_fails_validation" {
   }
 
   expect_failures = [
-    var.dd_api_key
+    check.dd_api_key_not_used_with_secret_arn
   ]
 }
 
-# dd_api_key + dd_api_key_ssm_parameter_name should fail
-run "api_key_and_ssm_parameter_conflict_fails_validation" {
+# dd_api_key + dd_api_key_ssm_parameter_name should warn
+run "api_key_and_ssm_parameter_conflict_warns" {
   command = plan
 
   variables {
@@ -240,12 +242,12 @@ run "api_key_and_ssm_parameter_conflict_fails_validation" {
   }
 
   expect_failures = [
-    var.dd_api_key
+    check.dd_api_key_not_used_with_ssm_parameter
   ]
 }
 
-# dd_api_key_secret_arn + dd_api_key_ssm_parameter_name should fail
-run "secret_arn_and_ssm_parameter_conflict_fails_validation" {
+# dd_api_key_secret_arn + dd_api_key_ssm_parameter_name should warn
+run "secret_arn_and_ssm_parameter_conflict_warns" {
   command = plan
 
   variables {
@@ -254,6 +256,6 @@ run "secret_arn_and_ssm_parameter_conflict_fails_validation" {
   }
 
   expect_failures = [
-    var.dd_api_key_secret_arn
+    check.dd_secret_arn_not_used_with_ssm_parameter
   ]
 }

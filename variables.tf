@@ -10,6 +10,11 @@ variable "dd_api_key" {
     Choose ONE approach for API key management.
   EOT
   sensitive   = true
+
+  validation {
+    condition     = var.dd_api_key == null || (var.dd_api_key_secret_arn == null && var.dd_api_key_ssm_parameter_name == null)
+    error_message = "dd_api_key is mutually exclusive with dd_api_key_secret_arn and dd_api_key_ssm_parameter_name. Choose one approach for API key management."
+  }
 }
 
 variable "dd_allowed_kms_keys" {
@@ -52,6 +57,11 @@ variable "dd_api_key_secret_arn" {
   validation {
     condition     = var.dd_api_key_secret_arn == null || can(regex("^arn:.*:secretsmanager:.*", var.dd_api_key_secret_arn))
     error_message = "dd_api_key_secret_arn must be a valid Secrets Manager ARN."
+  }
+
+  validation {
+    condition     = var.dd_api_key_secret_arn == null || var.dd_api_key_ssm_parameter_name == null
+    error_message = "dd_api_key_secret_arn and dd_api_key_ssm_parameter_name are mutually exclusive. Choose one approach for API key management."
   }
 }
 

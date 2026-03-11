@@ -211,3 +211,49 @@ run "invalid_ssm_parameter_name_fails_validation" {
     var.dd_api_key_ssm_parameter_name
   ]
 }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario 6: mutual exclusivity — conflicting API key configurations rejected
+# ─────────────────────────────────────────────────────────────────────────────
+
+# dd_api_key + dd_api_key_secret_arn should fail
+run "api_key_and_secret_arn_conflict_fails_validation" {
+  command = plan
+
+  variables {
+    dd_api_key            = "test-api-key-value"
+    dd_api_key_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-key-AbCdEf"
+  }
+
+  expect_failures = [
+    var.dd_api_key
+  ]
+}
+
+# dd_api_key + dd_api_key_ssm_parameter_name should fail
+run "api_key_and_ssm_parameter_conflict_fails_validation" {
+  command = plan
+
+  variables {
+    dd_api_key                    = "test-api-key-value"
+    dd_api_key_ssm_parameter_name = "/datadog/api-key"
+  }
+
+  expect_failures = [
+    var.dd_api_key
+  ]
+}
+
+# dd_api_key_secret_arn + dd_api_key_ssm_parameter_name should fail
+run "secret_arn_and_ssm_parameter_conflict_fails_validation" {
+  command = plan
+
+  variables {
+    dd_api_key_secret_arn         = "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-key-AbCdEf"
+    dd_api_key_ssm_parameter_name = "/datadog/api-key"
+  }
+
+  expect_failures = [
+    var.dd_api_key_secret_arn
+  ]
+}

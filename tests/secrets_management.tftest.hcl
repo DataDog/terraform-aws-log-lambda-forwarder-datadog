@@ -64,7 +64,6 @@ run "external_secret_arn_test" {
   command = plan
 
   variables {
-    dd_api_key            = "test-api-key-value"
     dd_api_key_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:DatadogAPIKey-mock"
   }
 

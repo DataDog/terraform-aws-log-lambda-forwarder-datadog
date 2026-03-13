@@ -53,6 +53,7 @@ variable "dd_api_key_secret_arn" {
     condition     = var.dd_api_key_secret_arn == null || can(regex("^arn:.*:secretsmanager:.*", var.dd_api_key_secret_arn))
     error_message = "dd_api_key_secret_arn must be a valid Secrets Manager ARN."
   }
+
 }
 
 variable "dd_api_key_ssm_parameter_name" {

@@ -20,7 +20,6 @@ mock_provider "aws" {
 }
 
 variables {
-  dd_api_key                        = "test-api-key-value"
   dd_site                           = "datadoghq.com"
   existing_iam_role_arn             = "arn:aws:iam::123456789012:role/existing-datadog-role"
   dd_forwarder_existing_bucket_name = "existing-datadog-bucket"

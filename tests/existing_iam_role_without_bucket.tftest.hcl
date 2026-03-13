@@ -27,8 +27,6 @@ run "existing_role_with_ssm_no_bucket" {
   command = plan
 
   variables {
-    dd_api_key                    = "test-api-key-value"
-    dd_site                       = "datadoghq.com"
     existing_iam_role_arn         = "arn:aws:iam::123456789012:role/existing-datadog-role"
     dd_api_key_ssm_parameter_name = "/datadog/api-key"
   }
@@ -51,8 +49,6 @@ run "existing_role_with_secret_arn_no_bucket" {
   command = plan
 
   variables {
-    dd_api_key            = "test-api-key-value"
-    dd_site               = "datadoghq.com"
     existing_iam_role_arn = "arn:aws:iam::123456789012:role/existing-datadog-role"
     dd_api_key_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:datadog-api-key-AbCdEf"
   }
@@ -75,8 +71,6 @@ run "existing_role_with_tag_fetching" {
   command = plan
 
   variables {
-    dd_api_key                    = "test-api-key-value"
-    dd_site                       = "datadoghq.com"
     existing_iam_role_arn         = "arn:aws:iam::123456789012:role/existing-datadog-role"
     dd_api_key_ssm_parameter_name = "/datadog/api-key"
     dd_fetch_lambda_tags          = true
@@ -100,8 +94,6 @@ run "existing_role_with_failed_events" {
   command = plan
 
   variables {
-    dd_api_key                    = "test-api-key-value"
-    dd_site                       = "datadoghq.com"
     existing_iam_role_arn         = "arn:aws:iam::123456789012:role/existing-datadog-role"
     dd_api_key_ssm_parameter_name = "/datadog/api-key"
     dd_store_failed_events        = true

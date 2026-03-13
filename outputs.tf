@@ -21,6 +21,7 @@ output "datadog_forwarder_role_name" {
 output "dd_api_key_secret_arn" {
   description = "ARN of SecretsManager Secret with Datadog API Key (only set if created by this module)"
   value       = local.should_create_secret ? aws_secretsmanager_secret.dd_api_key_secret[0].arn : null
+  sensitive   = true
 }
 
 output "forwarder_bucket_name" {

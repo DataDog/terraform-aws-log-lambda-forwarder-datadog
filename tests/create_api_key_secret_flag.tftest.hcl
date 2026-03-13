@@ -211,3 +211,51 @@ run "invalid_ssm_parameter_name_fails_validation" {
     var.dd_api_key_ssm_parameter_name
   ]
 }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario 6: mutual exclusivity — conflicting API key configurations warn
+# These are deprecation warnings (check blocks) that will become hard errors
+# in a future major release.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# dd_api_key + dd_api_key_secret_arn should warn
+run "api_key_and_secret_arn_conflict_warns" {
+  command = plan
+
+  variables {
+    dd_api_key            = "test-api-key-value"
+    dd_api_key_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-key-AbCdEf"
+  }
+
+  expect_failures = [
+    check.dd_api_key_not_used_with_secret_arn
+  ]
+}
+
+# dd_api_key + dd_api_key_ssm_parameter_name should warn
+run "api_key_and_ssm_parameter_conflict_warns" {
+  command = plan
+
+  variables {
+    dd_api_key                    = "test-api-key-value"
+    dd_api_key_ssm_parameter_name = "/datadog/api-key"
+  }
+
+  expect_failures = [
+    check.dd_api_key_not_used_with_ssm_parameter
+  ]
+}
+
+# dd_api_key_secret_arn + dd_api_key_ssm_parameter_name should warn
+run "secret_arn_and_ssm_parameter_conflict_warns" {
+  command = plan
+
+  variables {
+    dd_api_key_secret_arn         = "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-key-AbCdEf"
+    dd_api_key_ssm_parameter_name = "/datadog/api-key"
+  }
+
+  expect_failures = [
+    check.dd_secret_arn_not_used_with_ssm_parameter
+  ]
+}

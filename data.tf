@@ -62,3 +62,26 @@ locals {
     } : {}
   )
 }
+
+# Deprecation warnings for conflicting API key configurations.
+# These will become hard validation errors in a future major release.
+check "dd_api_key_not_used_with_secret_arn" {
+  assert {
+    condition     = var.dd_api_key == null || var.dd_api_key_secret_arn == null
+    error_message = "DEPRECATED: dd_api_key and dd_api_key_secret_arn are both set. Only one API key approach should be used. Currently dd_api_key is being ignored in favor of dd_api_key_secret_arn. Remove dd_api_key to silence this warning. This will become an error in a future release."
+  }
+}
+
+check "dd_api_key_not_used_with_ssm_parameter" {
+  assert {
+    condition     = var.dd_api_key == null || var.dd_api_key_ssm_parameter_name == null
+    error_message = "DEPRECATED: dd_api_key and dd_api_key_ssm_parameter_name are both set. Only one API key approach should be used. Currently dd_api_key is being ignored in favor of dd_api_key_ssm_parameter_name. Remove dd_api_key to silence this warning. This will become an error in a future release."
+  }
+}
+
+check "dd_secret_arn_not_used_with_ssm_parameter" {
+  assert {
+    condition     = var.dd_api_key_secret_arn == null || var.dd_api_key_ssm_parameter_name == null
+    error_message = "DEPRECATED: dd_api_key_secret_arn and dd_api_key_ssm_parameter_name are both set. Only one API key approach should be used. Currently dd_api_key_secret_arn is being ignored in favor of dd_api_key_ssm_parameter_name. Remove dd_api_key_secret_arn to silence this warning. This will become an error in a future release."
+  }
+}

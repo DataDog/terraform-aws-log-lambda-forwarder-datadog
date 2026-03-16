@@ -25,9 +25,9 @@ run "sqs_auto_enables_store_failed_events" {
   command = plan
 
   variables {
-    dd_api_key         = "test-api-key-value"
-    dd_site            = "datadoghq.com"
-    dd_sqs_queue_url   = "https://sqs.us-east-1.amazonaws.com/123456789012/my-failed-events-queue"
+    dd_api_key       = "test-api-key-value"
+    dd_site          = "datadoghq.com"
+    dd_sqs_queue_url = "https://sqs.us-east-1.amazonaws.com/123456789012/my-failed-events-queue"
   }
 
   # No S3 bucket should be created when only SQS is configured
@@ -90,7 +90,6 @@ run "sqs_with_existing_iam_role" {
   command = plan
 
   variables {
-    dd_api_key                    = "test-api-key-value"
     dd_site                       = "datadoghq.com"
     dd_sqs_queue_url              = "https://sqs.us-east-1.amazonaws.com/123456789012/my-failed-events-queue"
     existing_iam_role_arn         = "arn:aws:iam::123456789012:role/existing-datadog-role"
@@ -121,10 +120,10 @@ run "sqs_with_scheduled_retry" {
   command = plan
 
   variables {
-    dd_api_key                       = "test-api-key-value"
-    dd_site                          = "datadoghq.com"
-    dd_sqs_queue_url                 = "https://sqs.us-east-1.amazonaws.com/123456789012/my-failed-events-queue"
-    dd_schedule_retry_failed_events  = true
+    dd_api_key                      = "test-api-key-value"
+    dd_site                         = "datadoghq.com"
+    dd_sqs_queue_url                = "https://sqs.us-east-1.amazonaws.com/123456789012/my-failed-events-queue"
+    dd_schedule_retry_failed_events = true
   }
 
   # Scheduler resources should be created

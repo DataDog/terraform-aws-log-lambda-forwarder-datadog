@@ -24,7 +24,14 @@ locals {
   )
 
   # Determine if we need to create an S3 bucket for caching and failed events storage
-  create_s3_bucket = (coalesce(var.dd_fetch_log_group_tags, false) || coalesce(var.dd_fetch_lambda_tags, false) || coalesce(var.dd_fetch_s3_tags, false) || coalesce(var.dd_store_failed_events, false)) && var.dd_forwarder_existing_bucket_name == null
+  create_s3_bucket = (coalesce(var.dd_fetch_log_group_tags, false) || coalesce(var.dd_fetch_lambda_tags, false) || coalesce(var.dd_fetch_s3_tags, false) || (coalesce(var.dd_store_failed_events, false) && var.dd_sqs_queue_url == null)) && var.dd_forwarder_existing_bucket_name == null
+
+  # SQS queue ARN derived from URL for IAM policy
+  # URL format: https://sqs.{region}.amazonaws.com/{account_id}/{queue_name}
+  sqs_queue_arn = var.dd_sqs_queue_url != null ? "arn:${data.aws_partition.current.partition}:sqs:${regex("https://sqs\\.([a-z0-9-]+)\\.amazonaws\\.com", var.dd_sqs_queue_url)[0]}:${split("/", var.dd_sqs_queue_url)[3]}:${split("/", var.dd_sqs_queue_url)[4]}" : null
+
+  # Whether failed events storage is enabled (via S3 or SQS)
+  store_failed_events_enabled = var.dd_sqs_queue_url != null || (coalesce(var.dd_store_failed_events, false) && (local.create_s3_bucket || var.dd_forwarder_existing_bucket_name != null))
 
   # Account ID varies by partition
   dd_account_id = data.aws_partition.current.partition == "aws-us-gov" ? "002406178527" : "464622532012"

@@ -106,6 +106,12 @@ variable "region" {
   description = "AWS region for resource naming"
 }
 
+variable "sqs_queue_arn" {
+  type        = string
+  default     = null
+  description = "ARN of the SQS queue for failed event storage"
+}
+
 variable "account_id" {
   type        = string
   description = "AWS account ID"

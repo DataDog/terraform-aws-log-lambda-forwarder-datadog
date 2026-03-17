@@ -28,6 +28,7 @@ mock_provider "aws" {
 variables {
   dd_site = "datadoghq.com"
   region  = "us-east-1"
+  layer_version = "92"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -39,13 +40,6 @@ run "explicit_false_with_secret_arn" {
   variables {
     dd_api_key_secret_arn    = "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-dd-key-AbCdEf"
     create_dd_api_key_secret = false
-  }
-
-  override_data {
-    target = data.http.forwarder_versions
-    values = {
-      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
-    }
   }
 
   assert {
@@ -70,13 +64,6 @@ run "explicit_false_with_ssm_parameter" {
     create_dd_api_key_secret      = false
   }
 
-  override_data {
-    target = data.http.forwarder_versions
-    values = {
-      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
-    }
-  }
-
   assert {
     condition     = length(aws_secretsmanager_secret.dd_api_key_secret) == 0
     error_message = "No secret should be created when using SSM parameter with flag=false"
@@ -92,13 +79,6 @@ run "explicit_true_creates_secret" {
   variables {
     dd_api_key               = "test-api-key-value"
     create_dd_api_key_secret = true
-  }
-
-  override_data {
-    target = data.http.forwarder_versions
-    values = {
-      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
-    }
   }
 
   assert {
@@ -118,13 +98,6 @@ run "null_flag_auto_creates_secret_from_api_key" {
     # create_dd_api_key_secret not set (null/default)
   }
 
-  override_data {
-    target = data.http.forwarder_versions
-    values = {
-      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
-    }
-  }
-
   assert {
     condition     = length(aws_secretsmanager_secret.dd_api_key_secret) == 1
     error_message = "Secret should be auto-created when dd_api_key is provided and flag is null"
@@ -137,13 +110,6 @@ run "null_flag_auto_skips_secret_with_external_arn" {
   variables {
     dd_api_key_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:existing-key-XyZwAb"
     # create_dd_api_key_secret not set (null/default)
-  }
-
-  override_data {
-    target = data.http.forwarder_versions
-    values = {
-      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
-    }
   }
 
   assert {

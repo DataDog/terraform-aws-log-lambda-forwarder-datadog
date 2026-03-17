@@ -1,4 +1,4 @@
-# Test the dd_forwarder_version tag functionality
+# Test explicit layer version configuration
 mock_provider "aws" {
   mock_data "aws_caller_identity" {
     defaults = {
@@ -20,62 +20,35 @@ mock_provider "aws" {
 }
 
 variables {
-  dd_api_key = "test-api-key-value"
-  dd_site    = "datadoghq.com"
+  dd_api_key     = "test-api-key-value"
+  dd_site        = "datadoghq.com"
+  layer_version  = "92"
 }
 
-# Test with layer_version = "latest" (default)
-run "version_tag_with_latest" {
+run "explicit_layer_version" {
   command = plan
 
-  # Lambda should have dd_forwarder_version tag
-  assert {
-    condition     = contains(keys(aws_lambda_function.forwarder.tags), "dd_forwarder_version")
-    error_message = "Lambda function should have dd_forwarder_version tag"
-  }
-
-  # Tag should be a semantic version (e.g., "5.1.0")
-  assert {
-    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+", aws_lambda_function.forwarder.tags["dd_forwarder_version"]))
-    error_message = "dd_forwarder_version tag should be a semantic version (e.g., 5.1.0)"
-  }
-
-  # Verify local.forwarder_version is set
-  assert {
-    condition     = local.forwarder_version != null
-    error_message = "local.forwarder_version should be set when using latest"
-  }
-}
-
-# Test with specific layer_version
-run "version_tag_with_specific_layer" {
-  command = plan
-
-  variables {
-    layer_version = "92"
-  }
-
-  # Lambda should have dd_forwarder_version tag
-  assert {
-    condition     = contains(keys(aws_lambda_function.forwarder.tags), "dd_forwarder_version")
-    error_message = "Lambda function should have dd_forwarder_version tag when using specific layer version"
-  }
-
-  # Tag should be a semantic version
-  assert {
-    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+", aws_lambda_function.forwarder.tags["dd_forwarder_version"]))
-    error_message = "dd_forwarder_version tag should be a semantic version"
-  }
-
-  # Layer ARN should use the specified version
   assert {
     condition     = can(regex(":92$", aws_lambda_function.forwarder.layers[0]))
     error_message = "Lambda layer ARN should end with :92"
   }
 }
 
-# Test that user tags are preserved alongside dd_forwarder_version
-run "version_tag_with_user_tags" {
+run "custom_layer_arn" {
+  command = plan
+
+  variables {
+    layer_version = null
+    layer_arn     = "arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Forwarder:94"
+  }
+
+  assert {
+    condition     = aws_lambda_function.forwarder.runtime == "python3.14"
+    error_message = "Lambda runtime should be python3.14 for layer version 94"
+  }
+}
+
+run "user_tags_are_preserved" {
   command = plan
 
   variables {
@@ -85,7 +58,6 @@ run "version_tag_with_user_tags" {
     }
   }
 
-  # User tags should be present
   assert {
     condition     = aws_lambda_function.forwarder.tags["Environment"] == "test"
     error_message = "User-provided Environment tag should be preserved"
@@ -95,11 +67,4 @@ run "version_tag_with_user_tags" {
     condition     = aws_lambda_function.forwarder.tags["Team"] == "platform"
     error_message = "User-provided Team tag should be preserved"
   }
-
-  # dd_forwarder_version should also be present
-  assert {
-    condition     = contains(keys(aws_lambda_function.forwarder.tags), "dd_forwarder_version")
-    error_message = "dd_forwarder_version tag should be added alongside user tags"
-  }
 }
-

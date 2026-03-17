@@ -177,14 +177,34 @@ variable "log_retention_in_days" {
 
 variable "layer_version" {
   type        = string
-  default     = "latest"
-  description = "Version of the Datadog Forwarder Lambda layer. Use 'latest' to automatically fetch the latest version from GitHub releases or specify a version like '89'."
+  default     = null
+  description = "Version of the Datadog Forwarder Lambda layer. Specify an explicit version like '89' when layer_arn is not provided."
+
+  validation {
+    condition     = var.layer_version == null || var.layer_version != "latest"
+    error_message = "layer_version no longer supports 'latest'. Specify an explicit layer version or set layer_arn."
+  }
+
+  validation {
+    condition     = var.layer_version == null || can(regex("^[0-9]+$", var.layer_version))
+    error_message = "layer_version must be a numeric string like '89'."
+  }
+
+  validation {
+    condition     = var.layer_version != null || var.layer_arn != null
+    error_message = "You must specify either layer_version or layer_arn."
+  }
 }
 
 variable "layer_arn" {
   type        = string
   default     = null
   description = "ARN for the layer containing the forwarder code. If empty, the script will use the version of the layer the forwarder was published with."
+
+  validation {
+    condition     = var.layer_arn == null || can(regex("^arn:.*:lambda:.*:layer:.*:[0-9]+$", var.layer_arn))
+    error_message = "layer_arn must be a valid Lambda layer ARN ending in a numeric version."
+  }
 }
 
 # Datadog configuration

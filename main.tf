@@ -24,6 +24,7 @@ module "iam" {
   dd_fetch_s3_tags                  = var.dd_fetch_s3_tags
   dd_use_vpc                        = var.dd_use_vpc
   additional_target_lambda_arns     = var.additional_target_lambda_arns != null ? split(",", var.additional_target_lambda_arns) : []
+  sqs_queue_arn                     = local.sqs_queue_arn
 }
 
 # Secrets Manager secret for Datadog API key
@@ -129,7 +130,7 @@ resource "aws_s3_bucket_public_access_block" "forwarder_bucket_pab" {
 }
 
 resource "aws_s3_bucket_logging" "forwarder_bucket_logging" {
-  count = var.dd_forwarder_buckets_access_logs_target != null ? 1 : 0
+  count = var.dd_forwarder_buckets_access_logs_target != null && local.create_s3_bucket ? 1 : 0
 
   region = local.region
 
@@ -253,7 +254,8 @@ resource "aws_lambda_function" "forwarder" {
         DD_NO_SSL                       = var.dd_no_ssl
         DD_URL                          = var.dd_url
         DD_PORT                         = var.dd_port
-        DD_STORE_FAILED_EVENTS          = coalesce(var.dd_store_failed_events, false) && (local.create_s3_bucket || var.dd_forwarder_existing_bucket_name != null) ? "true" : null
+        DD_STORE_FAILED_EVENTS          = local.store_failed_events_enabled ? "true" : null
+        DD_SQS_QUEUE_URL                = var.dd_sqs_queue_url
         REDACT_IP                       = var.redact_ip != null ? tostring(var.redact_ip) : null
         REDACT_EMAIL                    = var.redact_email != null ? tostring(var.redact_email) : null
         DD_SCRUBBING_RULE               = var.dd_scrubbing_rule
@@ -362,7 +364,7 @@ resource "aws_cloudwatch_log_group" "forwarder_log_group" {
 # Scheduled retry
 
 resource "aws_iam_role" "scheduled_retry" {
-  count = coalesce(var.dd_store_failed_events, false) && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
+  count = local.store_failed_events_enabled && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
 
   name = "${var.function_name}-${local.region}-retry"
 
@@ -385,7 +387,7 @@ resource "aws_iam_role" "scheduled_retry" {
 }
 
 resource "aws_iam_role_policy" "scheduled_retry" {
-  count = coalesce(var.dd_store_failed_events, false) && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
+  count = local.store_failed_events_enabled && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
 
   name = "${var.function_name}-${local.region}-retry-policy"
   role = aws_iam_role.scheduled_retry[0].id
@@ -405,7 +407,7 @@ resource "aws_iam_role_policy" "scheduled_retry" {
 }
 
 resource "aws_scheduler_schedule" "scheduled_retry" {
-  count = coalesce(var.dd_store_failed_events, false) && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
+  count = local.store_failed_events_enabled && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
 
   name                = "${var.function_name}-${local.region}-retry"
   description         = "Retry the failed events from the Datadog Lambda Forwarder ${var.function_name}"

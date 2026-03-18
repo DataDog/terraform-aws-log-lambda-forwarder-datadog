@@ -451,6 +451,22 @@ variable "dd_store_failed_events" {
   description = "Set to true to enable the forwarder to store events that failed to send to Datadog."
 }
 
+variable "dd_sqs_queue_url" {
+  type        = string
+  default     = null
+  description = "URL of an existing SQS queue for failed event storage. When set, the forwarder uses SQS instead of S3 for retry storage, and DD_STORE_FAILED_EVENTS is automatically enabled. The queue must already exist. Requires forwarder layer version >= 97. Format: https://sqs.{region}.amazonaws.com/{account_id}/{queue_name}"
+
+  validation {
+    condition     = var.dd_sqs_queue_url == null || can(regex("^https://sqs\\.[a-z0-9-]+\\.amazonaws\\.com[a-z.]*/[0-9]{12}/[a-zA-Z0-9_.-]+$", var.dd_sqs_queue_url))
+    error_message = "dd_sqs_queue_url must be a valid SQS queue URL (e.g. https://sqs.us-east-1.amazonaws.com/123456789012/my-queue)."
+  }
+
+  validation {
+    condition     = var.dd_sqs_queue_url == null || var.layer_version == "latest" || (can(tonumber(var.layer_version)) && tonumber(var.layer_version) >= 97)
+    error_message = "dd_sqs_queue_url requires forwarder layer version >= 97 (forwarder 5.3.0+). Set layer_version = \"latest\" or a version >= 97."
+  }
+}
+
 variable "dd_schedule_retry_failed_events" {
   type        = bool
   default     = null

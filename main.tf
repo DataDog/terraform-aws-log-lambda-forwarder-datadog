@@ -1,9 +1,3 @@
-provider "aws" {
-  region = "eu-west-1"
-
-  allowed_account_ids = ["888322182566"]
-}
-
 # IAM role and policies for the Forwarder Lambda
 module "iam" {
   count = var.existing_iam_role_arn == null ? 1 : 0

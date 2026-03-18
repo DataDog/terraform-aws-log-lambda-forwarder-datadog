@@ -3,25 +3,10 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
-# Fetch version mapping from public S3 bucket
-data "http" "forwarder_versions" {
-  url = "https://datadog-opensource-asset-versions.s3.us-east-1.amazonaws.com/forwarder/versions.json"
-}
-
 # Local values
 locals {
-  # Parse version mapping from S3
-  version_data = jsondecode(data.http.forwarder_versions.response_body)
-
-  # Determine layer version: use latest or specified version
-  layer_version = var.layer_version == "latest" ? local.version_data.latest.layer_version : var.layer_version
-
-  # Determine forwarder version: use latest or lookup in mappings
-  forwarder_version = (
-    var.layer_version == "latest"
-    ? local.version_data.latest.forwarder_version
-    : lookup(local.version_data.mappings, var.layer_version, null)
-  )
+  # Determine layer version from explicit input or layer ARN
+  layer_version = var.layer_version != null ? var.layer_version : regex("[0-9]+$", var.layer_arn)
 
   # Determine if we need to create an S3 bucket for caching and failed events storage
   create_s3_bucket = (coalesce(var.dd_fetch_log_group_tags, false) || coalesce(var.dd_fetch_lambda_tags, false) || coalesce(var.dd_fetch_s3_tags, false) || (coalesce(var.dd_store_failed_events, false) && var.dd_sqs_queue_url == null)) && var.dd_forwarder_existing_bucket_name == null
@@ -61,13 +46,7 @@ locals {
     var.dd_api_key_secret_arn
   ) : null
 
-  # Merge dd_forwarder_version tag with user-provided tags (only when version is known)
-  tags_with_version = merge(
-    var.tags,
-    local.forwarder_version != null ? {
-      dd_forwarder_version = local.forwarder_version
-    } : {}
-  )
+  tags_with_version = var.tags
 }
 
 # Deprecation warnings for conflicting API key configurations.

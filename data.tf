@@ -70,6 +70,10 @@ locals {
   )
 }
 
+data "aws_lambda_layer_version" "this" {
+  layer_version_arn = local.default_layer_arn
+}
+
 # Deprecation warnings for conflicting API key configurations.
 # These will become hard validation errors in a future major release.
 check "dd_api_key_not_used_with_secret_arn" {

@@ -22,6 +22,14 @@ mock_provider "aws" {
       arn = "arn:aws:s3:::existing-datadog-bucket"
     }
   }
+
+  mock_data "aws_lambda_layer_version" {
+    defaults = {
+      compatible_runtimes = [
+        "python3.14",
+      ]
+    }
+  }
 }
 
 variables {

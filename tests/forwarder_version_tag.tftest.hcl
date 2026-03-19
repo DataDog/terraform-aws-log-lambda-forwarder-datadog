@@ -17,6 +17,16 @@ mock_provider "aws" {
       partition = "aws"
     }
   }
+
+  mock_data "aws_lambda_layer_version" {
+    defaults = {
+      compatible_runtimes = [
+        "python3.12",
+        "python3.14",
+        "python3.13"
+      ]
+    }
+  }
 }
 
 variables {
@@ -45,6 +55,12 @@ run "version_tag_with_latest" {
     condition     = local.forwarder_version != null
     error_message = "local.forwarder_version should be set when using latest"
   }
+
+  # Layer runtime should be set to the latest version of compatible_runtimes
+  assert {
+    condition     = aws_lambda_function.forwarder.runtime == "python3.14"
+    error_message = "Lambda runtime should be python3.14"
+  }
 }
 
 # Test with specific layer_version
@@ -53,6 +69,15 @@ run "version_tag_with_specific_layer" {
 
   variables {
     layer_version = "92"
+  }
+
+  override_data {
+    target = data.aws_lambda_layer_version.this
+    values = {
+      compatible_runtimes = [
+        "python3.13",
+      ]
+    }
   }
 
   # Lambda should have dd_forwarder_version tag
@@ -71,6 +96,12 @@ run "version_tag_with_specific_layer" {
   assert {
     condition     = can(regex(":92$", aws_lambda_function.forwarder.layers[0]))
     error_message = "Lambda layer ARN should end with :92"
+  }
+
+  # Runtime should match the compatible_runtimes returned by the layer data source
+  assert {
+    condition     = aws_lambda_function.forwarder.runtime == "python3.13"
+    error_message = "Lambda runtime should be python3.13"
   }
 }
 
@@ -102,4 +133,3 @@ run "version_tag_with_user_tags" {
     error_message = "dd_forwarder_version tag should be added alongside user tags"
   }
 }
-

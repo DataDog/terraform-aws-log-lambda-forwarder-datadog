@@ -187,6 +187,12 @@ variable "layer_arn" {
   description = "ARN for the layer containing the forwarder code. If empty, the script will use the version of the layer the forwarder was published with."
 }
 
+variable "additional_layers" {
+  type        = list(string)
+  default     = []
+  description = "Additional Lambda layers to attach to the forwarder function (e.g., Datadog Lambda Extension)."
+}
+
 # Datadog configuration
 variable "dd_tags" {
   type        = string

@@ -205,9 +205,10 @@ resource "aws_lambda_function" "forwarder" {
   timeout       = var.timeout
 
   # Use Lambda layer
-  layers = [
-    var.layer_arn != null ? var.layer_arn : local.default_layer_arn
-  ]
+  layers = concat(
+    [var.layer_arn != null ? var.layer_arn : local.default_layer_arn],
+    var.additional_layers
+  )
 
   # Static placeholder zip file for layer-based installation
   filename = local.placeholder_zip_path

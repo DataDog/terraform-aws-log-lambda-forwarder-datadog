@@ -460,11 +460,6 @@ variable "dd_sqs_queue_url" {
     condition     = var.dd_sqs_queue_url == null || can(regex("^https://sqs\\.[a-z0-9-]+\\.amazonaws\\.com[a-z.]*/[0-9]{12}/[a-zA-Z0-9_.-]+$", var.dd_sqs_queue_url))
     error_message = "dd_sqs_queue_url must be a valid SQS queue URL (e.g. https://sqs.us-east-1.amazonaws.com/123456789012/my-queue)."
   }
-
-  validation {
-    condition     = var.dd_sqs_queue_url == null || var.layer_version == "latest" || (can(tonumber(var.layer_version)) && tonumber(var.layer_version) >= 97)
-    error_message = "dd_sqs_queue_url requires forwarder layer version >= 97 (forwarder 5.3.0+). Set layer_version = \"latest\" or a version >= 97."
-  }
 }
 
 variable "dd_schedule_retry_failed_events" {

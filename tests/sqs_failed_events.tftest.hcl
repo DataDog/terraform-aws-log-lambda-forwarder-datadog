@@ -182,38 +182,6 @@ run "s3_fallback_unchanged" {
   }
 }
 
-# Test: SQS with old layer version fails validation
-run "sqs_with_old_layer_version_fails" {
-  command = plan
-
-  variables {
-    dd_api_key       = "test-api-key-value"
-    dd_site          = "datadoghq.com"
-    dd_sqs_queue_url = "https://sqs.us-east-1.amazonaws.com/123456789012/my-failed-events-queue"
-    layer_version    = "96"
-  }
-
-  expect_failures = [
-    var.dd_sqs_queue_url,
-  ]
-}
-
-# Test: SQS with layer version 97 succeeds
-run "sqs_with_layer_version_97" {
-  command = plan
-
-  variables {
-    dd_api_key       = "test-api-key-value"
-    dd_site          = "datadoghq.com"
-    dd_sqs_queue_url = "https://sqs.us-east-1.amazonaws.com/123456789012/my-failed-events-queue"
-    layer_version    = "97"
-  }
-
-  assert {
-    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_SQS_QUEUE_URL == "https://sqs.us-east-1.amazonaws.com/123456789012/my-failed-events-queue"
-    error_message = "DD_SQS_QUEUE_URL should be set with layer version 97"
-  }
-}
 
 # Test: IAM SQS permissions are included when dd_sqs_queue_url is set
 run "iam_sqs_permissions" {

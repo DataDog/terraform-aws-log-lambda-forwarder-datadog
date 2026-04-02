@@ -128,7 +128,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 | dd_max_workers                    | Max concurrent workers                                 | `string` | `null`  |
 | dd_log_level                      | Log level                                              | `string` | `null`  |
 | dd_store_failed_events            | Store failed events in S3                              | `bool`   | `null`  |
-| dd_sqs_queue_url                  | SQS queue URL for failed event storage (takes priority over S3 when set, auto-enables `dd_store_failed_events`) | `string` | `null`  |
+| dd_sqs_queue_url                  | SQS queue URL for failed event storage (requires layer version >= 97; takes priority over S3 when set, auto-enables `dd_store_failed_events`) | `string` | `null`  |
 | dd_schedule_retry_failed_events   | Periodically retry failed events (via AWS EventBridge) | `bool`   | `null`  |
 | dd_schedule_retry_interval        | Retry interval in hours for failed events              | `number` | `6`     |
 | dd_forwarder_bucket_name          | Custom S3 bucket name                                  | `string` | `null`  |

@@ -193,6 +193,12 @@ variable "additional_layers" {
   description = "Additional Lambda layers to attach to the forwarder function (e.g., Datadog Lambda Extension)."
 }
 
+variable "additional_environment_variables" {
+  type        = map(string)
+  default     = {}
+  description = "Additional environment variables to set on the forwarder Lambda function. Merged after all built-in variables, so these take precedence on conflict."
+}
+
 # Datadog configuration
 variable "dd_tags" {
   type        = string

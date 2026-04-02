@@ -278,7 +278,8 @@ resource "aws_lambda_function" "forwarder" {
         DD_API_URL                      = var.dd_api_url
         DD_TRACE_INTAKE_URL             = var.dd_trace_intake_url
         DD_LOG_LEVEL                    = var.dd_log_level
-      }
+      },
+      var.additional_environment_variables
     )
   }
 

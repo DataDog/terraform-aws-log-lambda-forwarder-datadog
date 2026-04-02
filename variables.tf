@@ -196,7 +196,7 @@ variable "additional_layers" {
 variable "additional_environment_variables" {
   type        = map(string)
   default     = {}
-  description = "Additional environment variables to set on the forwarder Lambda function. Merged after all built-in variables, so these take precedence on conflict."
+  description = "Additional environment variables to set on the forwarder Lambda function (e.g., DD_TRACE_SAMPLING_RULES for the Datadog Lambda Extension). Merged after all built-in variables, so these take precedence on conflict."
 }
 
 # Datadog configuration

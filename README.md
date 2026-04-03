@@ -20,9 +20,9 @@ For complete usage examples demonstrating different configuration scenarios, see
 - **[VPC Example](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-datadog/tree/main/examples/vpc)** - VPC deployment with enhanced metrics, custom log processing, and comprehensive tagging
 - **[Multi-Region Example](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-datadog/tree/main/examples/multi-region)** - Basic forwarder setup deployed across multiple AWS regions
 
-### Adding Extra Lambda Layers
+### Extra Layers and Environment Variables
 
-Use `additional_layers` to attach extra layers alongside the forwarder layer — for example, the [Datadog Lambda Extension](https://github.com/DataDog/datadog-lambda-extension) for forwarder telemetry:
+Use `additional_layers` and `additional_environment_variables` to customize the forwarder Lambda — for example, adding the [Datadog Lambda Extension](https://github.com/DataDog/datadog-lambda-extension) for forwarder telemetry:
 
 ```hcl
 module "datadog_forwarder" {
@@ -34,10 +34,14 @@ module "datadog_forwarder" {
   additional_layers = [
     "arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Extension-ARM:94"
   ]
+
+  additional_environment_variables = {
+    DD_TRACE_SAMPLING_RULES = jsonencode([{ sample_rate = 0.5 }])
+  }
 }
 ```
 
-The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environment variables — no additional configuration is needed.
+The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environment variables automatically. `additional_environment_variables` are merged last, so they take precedence over built-in variables on conflict.
 
 ## Requirements
 
@@ -84,6 +88,7 @@ The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environme
 | layer_version         | Version of the Datadog Forwarder Lambda layer                                                                                                                                     | `string`      | `"latest"`           |
 | layer_arn             | Custom layer ARN (optional)                                                                                                                                                       | `string`      | `null`               |
 | additional_layers     | Additional Lambda layers to attach to the forwarder function (e.g., [Datadog Lambda Extension](https://github.com/DataDog/datadog-lambda-extension))                              | `list(string)` | `[]`                |
+| additional_environment_variables | Additional environment variables to set on the forwarder Lambda (e.g., `DD_TRACE_SAMPLING_RULES` for the [Datadog Lambda Extension](https://github.com/DataDog/datadog-lambda-extension)). Merged last, so these take precedence over built-in variables on conflict. | `map(string)`  | `{}`                |
 | existing_iam_role_arn | ARN of existing IAM role to use for the Lambda function. When using an existing role, you must provide either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name`, and you are responsible for ensuring the role has the necessary permissions for any resources the module creates. See [Using an Existing IAM Role](#using-an-existing-iam-role) for details. | `string`      | `null`               |
 | tags                  | Resource tags                                                                                                                                                                     | `map(string)` | `{}`                 |
 

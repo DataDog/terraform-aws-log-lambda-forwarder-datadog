@@ -283,6 +283,11 @@ resource "aws_lambda_function" "forwarder" {
     )
   }
 
+  logging_config {
+    log_format = "Text"
+    log_group  = aws_cloudwatch_log_group.forwarder_log_group.name
+  }
+
   tags = local.tags_with_version
 
   lifecycle {
@@ -357,7 +362,7 @@ resource "aws_lambda_permission" "eventbridge_invoke" {
 resource "aws_cloudwatch_log_group" "forwarder_log_group" {
   region = local.region
 
-  name              = "/aws/lambda/${aws_lambda_function.forwarder.function_name}"
+  name              = "/aws/lambda/${var.function_name}"
   retention_in_days = var.log_retention_in_days
 
   tags = var.tags

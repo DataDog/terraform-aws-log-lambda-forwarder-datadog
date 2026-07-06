@@ -3,7 +3,7 @@ variable "dd_api_key" {
   type        = string
   default     = null
   description = <<-EOT
-    The Datadog API key, which can be found from the APIs page (/account/settings#api).
+    The Datadog API key, which can be found on the API Keys page (/organization-settings/api-keys).
     When provided, the module will automatically create and manage a Secrets Manager secret.
 
     NOTE: Do not use this with dd_api_key_secret_arn or dd_api_key_ssm_parameter_name.

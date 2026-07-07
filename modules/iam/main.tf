@@ -69,12 +69,26 @@ resource "aws_iam_role_policy" "forwarder_policy" {
         }
       ] : [],
 
+      # SQS permissions for failed event storage queue
+      var.sqs_queue_arn != null ? [
+        {
+          Effect = "Allow"
+          Action = [
+            "sqs:SendMessage",
+            "sqs:ReceiveMessage",
+            "sqs:DeleteMessage",
+            "sqs:ChangeMessageVisibility"
+          ]
+          Resource = var.sqs_queue_arn
+        }
+      ] : [],
+
       # S3 read access for logs
       [
         {
           Effect   = "Allow"
           Action   = ["s3:GetObject"]
-          Resource = "*"
+          Resource = var.dd_s3_log_bucket_arns
         }
       ],
 

@@ -2,7 +2,13 @@
 variable "dd_api_key" {
   type        = string
   default     = null
-  description = "The Datadog API key, which can be found from the APIs page (/account/settings#api). It will be stored in AWS Secrets Manager securely. If dd_api_key_secret_arn is also set, this value is ignored."
+  description = <<-EOT
+    The Datadog API key, which can be found on the API Keys page (/organization-settings/api-keys).
+    When provided, the module will automatically create and manage a Secrets Manager secret.
+
+    NOTE: Do not use this with dd_api_key_secret_arn or dd_api_key_ssm_parameter_name.
+    Choose ONE approach for API key management.
+  EOT
   sensitive   = true
 }
 
@@ -18,25 +24,77 @@ variable "dd_allowed_kms_keys" {
   }
 }
 
+variable "dd_s3_log_bucket_arns" {
+  type        = list(string)
+  description = "List of S3 ARN patterns the forwarder is allowed to read logs from (e.g. [\"arn:aws:s3:::my-bucket/*\", \"arn:aws:s3:::other-bucket/prefix/*\"]). Defaults to [\"*\"] (all buckets). WARNING: Restricting this may break Datadog's automatic log subscription setup and the forwarder execution for buckets not included in this list."
+  default     = ["*"]
+  validation {
+    condition = alltrue([
+      for arn in var.dd_s3_log_bucket_arns : arn == "*" || can(regex("^arn:aws[a-z-]*:s3:::", arn))
+    ])
+    error_message = "All S3 log bucket ARNs must be valid S3 ARNs (starting with 'arn:aws:s3:::') or '*' for all buckets."
+  }
+}
+
 variable "dd_api_key_secret_arn" {
   type        = string
   default     = null
-  description = "The ARN of the secret storing the Datadog API key, if you already have it stored in Secrets Manager. You must store the secret as a plaintext, rather than a key-value pair."
+  description = <<-EOT
+    The ARN of an existing secret storing the Datadog API key in AWS Secrets Manager.
+    The secret must be stored as plaintext, not as a key-value pair.
+
+    If the secret is created in the same Terraform plan, set create_dd_api_key_secret = false
+    so the module knows not to create its own secret.
+
+    NOTE: Do not use this with dd_api_key or dd_api_key_ssm_parameter_name.
+  EOT
 
   validation {
     condition     = var.dd_api_key_secret_arn == null || can(regex("^arn:.*:secretsmanager:.*", var.dd_api_key_secret_arn))
     error_message = "dd_api_key_secret_arn must be a valid Secrets Manager ARN."
   }
+
 }
 
 variable "dd_api_key_ssm_parameter_name" {
   type        = string
   default     = null
-  description = "The name of the SSM parameter containing Datadog's API key. If set, both dd_api_key and dd_api_key_secret_arn will be ignored, the forwarder will use the SSM parameter name to fetch the API key."
+  description = <<-EOT
+    The name of an existing SSM Parameter Store parameter containing the Datadog API key.
+
+    If the parameter is created in the same Terraform plan, set create_dd_api_key_secret = false
+    so the module knows not to create its own secret.
+
+    NOTE: Do not use this with dd_api_key or dd_api_key_secret_arn.
+    When set, this takes precedence over secret-based configuration.
+  EOT
 
   validation {
     condition     = var.dd_api_key_ssm_parameter_name == null || can(regex("^/[a-zA-Z0-9/_.-]*$", var.dd_api_key_ssm_parameter_name))
     error_message = "dd_api_key_ssm_parameter_name must match the pattern ^/[a-zA-Z0-9/_.-]*$."
+  }
+}
+
+variable "create_dd_api_key_secret" {
+  type        = bool
+  default     = null
+  description = <<-EOT
+    Controls whether the module creates a Secrets Manager secret for the Datadog API key.
+    - true: Force creation of secret (requires dd_api_key to be set)
+    - false: Do not create secret (requires dd_api_key_secret_arn or dd_api_key_ssm_parameter_name)
+    - null (default): Automatic behavior - create secret only if neither dd_api_key_secret_arn nor dd_api_key_ssm_parameter_name is provided
+
+    Set this to false when using secrets or parameters created in the same Terraform plan.
+  EOT
+
+  validation {
+    condition     = var.create_dd_api_key_secret != true || var.dd_api_key != null
+    error_message = "When create_dd_api_key_secret is true, dd_api_key must be provided."
+  }
+
+  validation {
+    condition     = var.create_dd_api_key_secret != false || (var.dd_api_key_secret_arn != null || var.dd_api_key_ssm_parameter_name != null)
+    error_message = "When create_dd_api_key_secret is false, either dd_api_key_secret_arn or dd_api_key_ssm_parameter_name must be provided."
   }
 }
 
@@ -127,6 +185,18 @@ variable "layer_arn" {
   type        = string
   default     = null
   description = "ARN for the layer containing the forwarder code. If empty, the script will use the version of the layer the forwarder was published with."
+}
+
+variable "additional_layers" {
+  type        = list(string)
+  default     = []
+  description = "Additional Lambda layers to attach to the forwarder function (e.g., Datadog Lambda Extension)."
+}
+
+variable "additional_environment_variables" {
+  type        = map(string)
+  default     = {}
+  description = "Additional environment variables to set on the forwarder Lambda function (e.g., DD_TRACE_SAMPLING_RULES for the Datadog Lambda Extension). Merged after all built-in variables, so these take precedence on conflict."
 }
 
 # Datadog configuration
@@ -385,6 +455,17 @@ variable "dd_store_failed_events" {
   type        = bool
   default     = null
   description = "Set to true to enable the forwarder to store events that failed to send to Datadog."
+}
+
+variable "dd_sqs_queue_url" {
+  type        = string
+  default     = null
+  description = "URL of an existing SQS queue for failed event storage. When set, the forwarder uses SQS instead of S3 for retry storage, and DD_STORE_FAILED_EVENTS is automatically enabled. The queue must already exist. Requires forwarder layer version >= 97. Format: https://sqs.{region}.amazonaws.com/{account_id}/{queue_name}"
+
+  validation {
+    condition     = var.dd_sqs_queue_url == null || can(regex("^https://sqs\\.[a-z0-9-]+\\.amazonaws\\.com[a-z.]*/[0-9]{12}/[a-zA-Z0-9_.-]+$", var.dd_sqs_queue_url))
+    error_message = "dd_sqs_queue_url must be a valid SQS queue URL (e.g. https://sqs.us-east-1.amazonaws.com/123456789012/my-queue)."
+  }
 }
 
 variable "dd_schedule_retry_failed_events" {

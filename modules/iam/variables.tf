@@ -61,6 +61,12 @@ variable "dd_allowed_kms_keys" {
   default     = ["*"]
 }
 
+variable "dd_s3_log_bucket_arns" {
+  type        = list(string)
+  description = "S3 ARN patterns the forwarder is allowed to read logs from"
+  default     = ["*"]
+}
+
 variable "dd_fetch_lambda_tags" {
   type        = bool
   default     = null
@@ -93,6 +99,12 @@ variable "additional_target_lambda_arns" {
 variable "region" {
   type        = string
   description = "AWS region for resource naming"
+}
+
+variable "sqs_queue_arn" {
+  type        = string
+  default     = null
+  description = "ARN of the SQS queue for failed event storage"
 }
 
 variable "account_id" {

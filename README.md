@@ -20,6 +20,29 @@ For complete usage examples demonstrating different configuration scenarios, see
 - **[VPC Example](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-datadog/tree/main/examples/vpc)** - VPC deployment with enhanced metrics, custom log processing, and comprehensive tagging
 - **[Multi-Region Example](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-datadog/tree/main/examples/multi-region)** - Basic forwarder setup deployed across multiple AWS regions
 
+### Extra Layers and Environment Variables
+
+Use `additional_layers` and `additional_environment_variables` to customize the forwarder Lambda — for example, adding the [Datadog Lambda Extension](https://github.com/DataDog/datadog-lambda-extension) for forwarder telemetry:
+
+```hcl
+module "datadog_forwarder" {
+  source = "DataDog/log-lambda-forwarder-datadog/aws"
+
+  dd_api_key_secret_arn = aws_secretsmanager_secret.datadog_api_key.arn
+  dd_site               = "datadoghq.com"
+
+  additional_layers = [
+    "arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Extension-ARM:94"
+  ]
+
+  additional_environment_variables = {
+    DD_TRACE_SAMPLING_RULES = jsonencode([{ sample_rate = 0.5 }])
+  }
+}
+```
+
+The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environment variables automatically. `additional_environment_variables` are merged last, so they take precedence over built-in variables on conflict.
+
 ## Requirements
 
 | Name      | Version  |
@@ -64,6 +87,8 @@ For complete usage examples demonstrating different configuration scenarios, see
 | log_retention_in_days | CloudWatch log retention                                                                                                                                                          | `number`      | `90`                 |
 | layer_version         | Version of the Datadog Forwarder Lambda layer                                                                                                                                     | `string`      | `"latest"`           |
 | layer_arn             | Custom layer ARN (optional)                                                                                                                                                       | `string`      | `null`               |
+| additional_layers     | Additional Lambda layers to attach to the forwarder function (e.g., [Datadog Lambda Extension](https://github.com/DataDog/datadog-lambda-extension))                              | `list(string)` | `[]`                |
+| additional_environment_variables | Additional environment variables to set on the forwarder Lambda (e.g., `DD_TRACE_SAMPLING_RULES` for the [Datadog Lambda Extension](https://github.com/DataDog/datadog-lambda-extension)). Merged last, so these take precedence over built-in variables on conflict. | `map(string)`  | `{}`                |
 | existing_iam_role_arn | ARN of existing IAM role to use for the Lambda function. When using an existing role, you must provide either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name`, and you are responsible for ensuring the role has the necessary permissions for any resources the module creates. See [Using an Existing IAM Role](#using-an-existing-iam-role) for details. | `string`      | `null`               |
 | tags                  | Resource tags                                                                                                                                                                     | `map(string)` | `{}`                 |
 
@@ -127,6 +152,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 | dd_max_workers                    | Max concurrent workers                                 | `string` | `null`  |
 | dd_log_level                      | Log level                                              | `string` | `null`  |
 | dd_store_failed_events            | Store failed events in S3                              | `bool`   | `null`  |
+| dd_sqs_queue_url                  | SQS queue URL for failed event storage (requires layer version >= 97; takes priority over S3 when set, auto-enables `dd_store_failed_events`) | `string` | `null`  |
 | dd_schedule_retry_failed_events   | Periodically retry failed events (via AWS EventBridge) | `bool`   | `null`  |
 | dd_schedule_retry_interval        | Retry interval in hours for failed events              | `number` | `6`     |
 | dd_forwarder_bucket_name          | Custom S3 bucket name                                  | `string` | `null`  |
@@ -143,6 +169,7 @@ For complete usage examples demonstrating different configuration scenarios, see
 | permissions_boundary_arn                | Permissions boundary ARN               | `string`       | `null`  |
 | tags_cache_ttl_seconds                  | Tags cache TTL in seconds              | `number`       | `300`   |
 | dd_allowed_kms_keys                     | Allow access to following KMS Key ARNs | `list(string)` | `["*"]` |
+| dd_s3_log_bucket_arns                   | S3 ARN patterns the forwarder is allowed to read logs from. **Warning:** restricting this may break automatic log subscription and forwarder execution for buckets not in the list. See [Restricting S3 Log Read Access](#restricting-s3-log-read-access). | `list(string)` | `["*"]` |
 | dd_forwarder_buckets_access_logs_target | Access logs target bucket              | `string`       | `null`  |
 
 ## Boolean Variable Behavior
@@ -194,7 +221,7 @@ See the [basic](https://github.com/DataDog/terraform-aws-log-lambda-forwarder-da
 
 The forwarder Lambda function is granted the following permissions:
 
-- **S3**: Read access to all S3 objects for log processing
+- **S3**: Read access to all S3 objects for log processing (can be restricted with `dd_s3_log_bucket_arns`)
 - **S3**: Read/write access to the forwarder bucket for caching and failed events
 - **KMS**: Decrypt access for encrypted S3 buckets
 - **Secrets Manager**: Read access to the Datadog API key secret
@@ -203,6 +230,26 @@ The forwarder Lambda function is granted the following permissions:
 - **CloudWatch Logs**: Read access for log group tags (if enabled)
 - **VPC**: Network interface management (if VPC is enabled)
 - **Lambda**: Invoke additional target functions (if configured)
+
+### Restricting S3 Log Read Access
+
+By default, the forwarder IAM role grants `s3:GetObject` on all S3 buckets (`"*"`) so it can read logs from any bucket that triggers it. You can restrict this to specific buckets using `dd_s3_log_bucket_arns`:
+
+```hcl
+module "datadog_forwarder" {
+  source = "path/to/this/module"
+
+  dd_api_key = var.datadog_api_key
+  dd_site    = "datadoghq.com"
+
+  dd_s3_log_bucket_arns = [
+    "arn:aws:s3:::my-log-bucket/*",
+    "arn:aws:s3:::my-other-bucket/logs/*",
+  ]
+}
+```
+
+> **Warning:** Restricting `dd_s3_log_bucket_arns` may break [Datadog's automatic log subscription setup](#recommended-automatic-trigger-setup), since Datadog may subscribe the forwarder to S3 buckets that are not included in this list. It will also cause the forwarder to fail when processing logs from any bucket not covered by the provided ARN patterns. Only use this option if you manage your own triggers and know exactly which buckets will send logs to the forwarder.
 
 ### Using an Existing IAM Role
 

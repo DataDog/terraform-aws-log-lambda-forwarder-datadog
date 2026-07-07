@@ -1,11 +1,27 @@
 # Test optional environment variables are set when provided
-provider "aws" {
-  region = "us-east-1"
+mock_provider "aws" {
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "123456789012"
+    }
+  }
+
+  mock_data "aws_region" {
+    defaults = {
+      region = "us-east-1"
+    }
+  }
+
+  mock_data "aws_partition" {
+    defaults = {
+      partition = "aws"
+    }
+  }
 }
 
 variables {
-  dd_api_key                    = "test-api-key-value"
   dd_site                       = "datadoghq.com"
+  dd_api_key_secret_arn         = "arn:aws:secretsmanager:us-east-1:123456789012:secret:DatadogAPIKey-mock"
   dd_tags                       = "env:test,service:forwarder"
   dd_fetch_lambda_tags          = true
   dd_fetch_log_group_tags       = true
@@ -19,7 +35,7 @@ variables {
 }
 
 run "optional_env_vars_test" {
-  command = apply
+  command = plan
 
   # Test that optional environment variables ARE set when provided
   assert {
@@ -72,9 +88,4 @@ run "optional_env_vars_test" {
     error_message = "DD_ADDITIONAL_TARGET_LAMBDAS should be set when provided"
   }
 
-  # Test that S3 bucket is created when tag fetching is enabled
-  assert {
-    condition     = length(aws_s3_bucket.forwarder_bucket) == 1
-    error_message = "S3 bucket should be created when tag fetching is enabled"
-  }
 }

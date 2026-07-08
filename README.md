@@ -147,20 +147,22 @@ The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environme
 
 ### Advanced Configuration
 
-| Name                              | Description                                            | Type     | Default |
-| --------------------------------- | ------------------------------------------------------ | -------- | ------- |
-| dd_compression_level              | Compression level (0-9)                                | `string` | `null`  |
-| dd_max_workers                    | Max concurrent workers                                 | `string` | `null`  |
-| dd_log_level                      | Log level                                              | `string` | `null`  |
-| dd_store_failed_events            | Store failed events in S3                              | `bool`   | `null`  |
+| Name                              | Description                                                                                                                                   | Type     | Default |
+|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------| -------- | ------- |
+| dd_compression_level              | Compression level (0-9)                                                                                                                       | `string` | `null`  |
+| dd_max_workers                    | Max concurrent workers                                                                                                                        | `string` | `null`  |
+| dd_log_level                      | Log level                                                                                                                                     | `string` | `null`  |
+| dd_store_failed_events            | Store failed events in S3                                                                                                                     | `bool`   | `null`  |
 | dd_sqs_queue_url                  | SQS queue URL for failed event storage (requires layer version >= 97; takes priority over S3 when set, auto-enables `dd_store_failed_events`) | `string` | `null`  |
-| dd_schedule_retry_failed_events   | Periodically retry failed events (via AWS EventBridge) | `bool`   | `null`  |
-| dd_schedule_retry_interval        | Retry interval in hours for failed events              | `number` | `6`     |
-| dd_forwarder_bucket_name          | Custom S3 bucket name                                  | `string` | `null`  |
-| dd_forwarder_existing_bucket_name | Existing S3 bucket name                                | `string` | `null`  |
-| dd_api_url                        | Custom API URL                                         | `string` | `null`  |
-| dd_trace_intake_url               | Custom trace intake URL                                | `string` | `null`  |
-| additional_target_lambda_arns     | Additional Lambda ARNs to invoke                       | `string` | `null`  |
+| dd_schedule_retry_failed_events   | Periodically retry failed events (via AWS EventBridge)                                                                                        | `bool`   | `null`  |
+| dd_schedule_retry_interval        | Retry interval in hours for failed events                                                                                                     | `number` | `6`     |
+| dd_forwarder_bucket_name          | Custom S3 bucket name                                                                                                                         | `string` | `null`  |
+| dd_forwarder_existing_bucket_name | Existing S3 bucket name                                                                                                                       | `string` | `null`  |
+| dd_api_url                        | Custom API URL                                                                                                                                | `string` | `null`  |
+| dd_trace_intake_url               | Custom trace intake URL                                                                                                                       | `string` | `null`  |
+| additional_target_lambda_arns     | Additional Lambda ARNs to invoke                                                                                                              | `string` | `null`  |
+| log_group_kms_key_arn             | KMS key used to encrypt the Lambda's Cloudwatch log group                                                                                     | `string` | `null`  |
+
 
 ### IAM Configuration
 
@@ -225,6 +227,7 @@ The forwarder Lambda function is granted the following permissions:
 - **S3**: Read access to all S3 objects for log processing (can be restricted with `dd_s3_log_bucket_arns`)
 - **S3**: Read/write access to the forwarder bucket for caching and failed events
 - **KMS**: Decrypt access for encrypted S3 buckets
+- **KMS**: Encrypt/decrypt access for Cloudwatch log group key (if configured)
 - **Secrets Manager**: Read access to the Datadog API key secret
 - **SSM**: Read access to SSM parameters (if using SSM for API key)
 - **Resource Groups**: Read access for tag fetching (if enabled)
@@ -258,7 +261,7 @@ When using `existing_iam_role_arn`, you are responsible for ensuring your IAM ro
 
 - **API Key Access**: You must provide either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name` (the module cannot grant your existing role access to a newly created secret)
 - **S3 Bucket**: If the module creates an S3 bucket (for tag caching with `dd_fetch_lambda_tags` or failed events with `dd_store_failed_events`), your role needs read/write access. Use the `forwarder_bucket_arn` output to configure your IAM policy.
-- **CloudWatch Logs**: Your role needs permissions to write to CloudWatch Logs. Use the `forwarder_log_group_arn` output to configure your IAM policy.
+- **CloudWatch Logs**: Your role needs permissions to write to CloudWatch Logs. Use the `forwarder_log_group_arn` output to configure your IAM policy. If the log group is encrypted with a KMS key, you will also need encrypt/decrypt permissions for that key.
 - **Other Permissions**: Depending on your configuration, your role may need additional permissions (KMS decrypt, Resource Groups for tag fetching, VPC network interfaces, etc.)
 
 This approach is useful when you want to apply least-privilege policies that are more restrictive than the module's default IAM role.

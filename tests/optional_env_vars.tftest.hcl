@@ -1,5 +1,11 @@
 # Test optional environment variables are set when provided
 mock_provider "aws" {
+  mock_data "aws_s3_object" {
+    defaults = {
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{\"92\":\"5.1.0\"}}"
+    }
+  }
+
   mock_data "aws_caller_identity" {
     defaults = {
       account_id = "123456789012"

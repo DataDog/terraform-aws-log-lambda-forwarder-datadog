@@ -17,6 +17,14 @@ mock_provider "aws" {
       partition = "aws"
     }
   }
+
+  mock_data "aws_lambda_layer_version" {
+    defaults = {
+      compatible_runtimes = [
+        "python3.14",
+      ]
+    }
+  }
 }
 
 # Path 1: dd_api_key only (auto-create secret)

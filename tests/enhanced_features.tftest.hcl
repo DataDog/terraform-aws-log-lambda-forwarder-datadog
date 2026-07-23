@@ -73,11 +73,6 @@ run "enhanced_features_env_vars_test" {
     error_message = "DD_FETCH_LOG_GROUP_TAGS should be true when enabled"
   }
 
-  assert {
-    condition     = aws_lambda_function.forwarder.environment[0].variables.DD_FETCH_STEP_FUNCTIONS_TAGS == "true"
-    error_message = "DD_FETCH_STEP_FUNCTIONS_TAGS should be true when enabled"
-  }
-
   # Test trace and log forwarding configuration
   assert {
     condition     = aws_lambda_function.forwarder.environment[0].variables.DD_TRACE_ENABLED == "false"

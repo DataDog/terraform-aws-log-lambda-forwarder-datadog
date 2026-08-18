@@ -128,8 +128,8 @@ variable "memory_size" {
   description = "Memory size for the Datadog Forwarder Lambda function"
 
   validation {
-    condition     = var.memory_size >= 128 && var.memory_size <= 3008
-    error_message = "memory_size must be between 128 and 3008."
+    condition     = var.memory_size >= 128 && var.memory_size <= 10240
+    error_message = "memory_size must be between 128 and 10240."
   }
 }
 

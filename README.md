@@ -62,7 +62,7 @@ The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environme
 
 | Name    | Description                                                                                                                                                                | Type     | Default           |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------- |
-| dd_site | Datadog site to send data to. Options: `datadoghq.com`, `datadoghq.eu`, `us3.datadoghq.com`, `us5.datadoghq.com`, `ap1.datadoghq.com`, `ap2.datadoghq.com`, `ddog-gov.com` | `string` | `"datadoghq.com"` |
+| dd_site | Datadog site to send data to. Options: `datadoghq.com`, `datadoghq.eu`, `us3.datadoghq.com`, `us5.datadoghq.com`, `ap1.datadoghq.com`, `ap2.datadoghq.com`, `uk1.datadoghq.com`, `ddog-gov.com` | `string` | `"datadoghq.com"` |
 
 **Note**: You must provide **one** of the following for the Datadog API key:
 

@@ -423,6 +423,8 @@ resource "aws_iam_role_policy" "scheduled_retry" {
 resource "aws_scheduler_schedule" "scheduled_retry" {
   count = local.store_failed_events_enabled && coalesce(var.dd_schedule_retry_failed_events, false) ? 1 : 0
 
+  region = local.region
+
   name                = "${var.function_name}-${local.region}-retry"
   description         = "Retry the failed events from the Datadog Lambda Forwarder ${var.function_name}"
   schedule_expression = "rate(${var.dd_schedule_retry_interval} hours)"

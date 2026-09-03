@@ -181,8 +181,8 @@ variable "log_group_kms_key_arn" {
   description = "KMS key used to encrypt the Cloudwatch log group for the Datadog Forwarder Lambda function"
 
   validation {
-    condition     = var.log_group_kms_key_arn == null || can(regex("^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[a-f0-9-]{36}$", var.log_group_kms_key_arn))
-    error_message = "Log group KMS key ARN must be valid ARN in the format 'arn:aws:kms:region:account:key/key-id'"
+    condition     = var.log_group_kms_key_arn == null || can(regex("^arn:aws[a-z0-9-]*:kms:[a-z0-9-]+:[0-9]{12}:(key|alias)/.+$", var.log_group_kms_key_arn))
+    error_message = "Log group KMS key ARN must be a valid ARN in the format 'arn:aws:kms:region:account:key/key-id' or 'arn:aws:kms:region:account:alias/alias-name'"
   }
 }
 

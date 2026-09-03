@@ -61,7 +61,7 @@ variable "dd_allowed_kms_keys" {
   default     = ["*"]
 }
 
-variable "dd_logging_kms_key" {
+variable "log_group_kms_key_arn" {
   type        = string
   description = "KMS key ARN for encrypting the Forwarder Lambda's Cloudwatch log group"
   default     = null

@@ -147,22 +147,21 @@ The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environme
 
 ### Advanced Configuration
 
-| Name                              | Description                                                                                                                                   | Type     | Default |
-|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------| -------- | ------- |
-| dd_compression_level              | Compression level (0-9)                                                                                                                       | `string` | `null`  |
-| dd_max_workers                    | Max concurrent workers                                                                                                                        | `string` | `null`  |
-| dd_log_level                      | Log level                                                                                                                                     | `string` | `null`  |
-| dd_store_failed_events            | Store failed events in S3                                                                                                                     | `bool`   | `null`  |
+| Name                              | Description                                              | Type     | Default |
+| --------------------------------- | --------------------------------------------------------- | -------- | ------- |
+| dd_compression_level              | Compression level (0-9)                                  | `string` | `null`  |
+| dd_max_workers                    | Max concurrent workers                                   | `string` | `null`  |
+| dd_log_level                      | Log level                                                | `string` | `null`  |
+| dd_store_failed_events            | Store failed events in S3                                | `bool`   | `null`  |
 | dd_sqs_queue_url                  | SQS queue URL for failed event storage (requires layer version >= 97; takes priority over S3 when set, auto-enables `dd_store_failed_events`) | `string` | `null`  |
-| dd_schedule_retry_failed_events   | Periodically retry failed events (via AWS EventBridge)                                                                                        | `bool`   | `null`  |
-| dd_schedule_retry_interval        | Retry interval in hours for failed events                                                                                                     | `number` | `6`     |
-| dd_forwarder_bucket_name          | Custom S3 bucket name                                                                                                                         | `string` | `null`  |
-| dd_forwarder_existing_bucket_name | Existing S3 bucket name                                                                                                                       | `string` | `null`  |
-| dd_api_url                        | Custom API URL                                                                                                                                | `string` | `null`  |
-| dd_trace_intake_url               | Custom trace intake URL                                                                                                                       | `string` | `null`  |
-| additional_target_lambda_arns     | Additional Lambda ARNs to invoke                                                                                                              | `string` | `null`  |
-| log_group_kms_key_arn             | KMS key used to encrypt the Lambda's Cloudwatch log group                                                                                     | `string` | `null`  |
-
+| dd_schedule_retry_failed_events   | Periodically retry failed events (via AWS EventBridge)   | `bool`   | `null`  |
+| dd_schedule_retry_interval        | Retry interval in hours for failed events                | `number` | `6`     |
+| dd_forwarder_bucket_name          | Custom S3 bucket name                                    | `string` | `null`  |
+| dd_forwarder_existing_bucket_name | Existing S3 bucket name                                  | `string` | `null`  |
+| dd_api_url                        | Custom API URL                                           | `string` | `null`  |
+| dd_trace_intake_url               | Custom trace intake URL                                  | `string` | `null`  |
+| additional_target_lambda_arns     | Additional Lambda ARNs to invoke                         | `string` | `null`  |
+| log_group_kms_key_arn             | KMS key used to encrypt the Lambda's Cloudwatch log group (must be in the same region as the forwarder) | `string` | `null`  |
 
 ### IAM Configuration
 
@@ -234,6 +233,36 @@ The forwarder Lambda function is granted the following permissions:
 - **CloudWatch Logs**: Read access for log group tags (if enabled)
 - **VPC**: Network interface management (if VPC is enabled)
 - **Lambda**: Invoke additional target functions (if configured)
+
+### Encrypting the Forwarder's Log Group with a Customer Managed KMS Key
+
+Setting `log_group_kms_key_arn` grants the forwarder's IAM role KMS permissions scoped via `kms:ViaService` to `logs.<region>.amazonaws.com`, but that alone is not sufficient. The key's own key policy must separately grant the CloudWatch Logs service principal for that region permission to use the key, or log group creation and log delivery will fail with an `AccessDeniedException`.
+
+Add a statement like this to the KMS key's policy:
+
+```json
+{
+  "Effect": "Allow",
+  "Principal": {
+    "Service": "logs.<region>.amazonaws.com"
+  },
+  "Action": [
+    "kms:Encrypt",
+    "kms:Decrypt",
+    "kms:ReEncrypt*",
+    "kms:GenerateDataKey*",
+    "kms:Describe*"
+  ],
+  "Resource": "*",
+  "Condition": {
+    "ArnLike": {
+      "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:<region>:<account-id>:log-group:/aws/lambda/<function-name>"
+    }
+  }
+}
+```
+
+See [Encrypt log data in CloudWatch Logs using AWS KMS](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html) for details.
 
 ### Restricting S3 Log Read Access
 

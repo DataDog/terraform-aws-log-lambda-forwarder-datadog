@@ -102,7 +102,7 @@ resource "aws_iam_role_policy" "forwarder_policy" {
       ],
 
       # KMS permissions for Cloudwatch log group
-      var.dd_logging_kms_key == null ? [] : [
+      var.log_group_kms_key_arn == null ? [] : [
         {
           Effect = "Allow"
           Action = [
@@ -112,7 +112,7 @@ resource "aws_iam_role_policy" "forwarder_policy" {
             "kms:GenerateDataKey",
             "kms:Describe*"
           ]
-          Resource = var.dd_logging_kms_key
+          Resource = var.log_group_kms_key_arn
           Condition = {
             StringEquals = {
               "kms:ViaService" = [

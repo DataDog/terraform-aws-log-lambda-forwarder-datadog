@@ -17,7 +17,7 @@ module "iam" {
   dd_api_key_ssm_parameter_name     = var.dd_api_key_ssm_parameter_name
   dd_api_key_secret_arn             = local.effective_secret_arn != null ? "${local.effective_secret_arn}*" : null
   dd_allowed_kms_keys               = var.dd_allowed_kms_keys
-  dd_logging_kms_key                = var.log_group_kms_key_arn
+  log_group_kms_key_arn             = var.log_group_kms_key_arn
   dd_s3_log_bucket_arns             = var.dd_s3_log_bucket_arns
   dd_fetch_lambda_tags              = var.dd_fetch_lambda_tags
   dd_fetch_step_functions_tags      = var.dd_fetch_step_functions_tags
@@ -368,6 +368,13 @@ resource "aws_cloudwatch_log_group" "forwarder_log_group" {
   kms_key_id        = var.log_group_kms_key_arn
 
   tags = var.tags
+
+  lifecycle {
+    precondition {
+      condition     = var.log_group_kms_key_arn == null || split(":", var.log_group_kms_key_arn)[3] == local.region
+      error_message = "log_group_kms_key_arn must be a key in the same region as the forwarder (${local.region})."
+    }
+  }
 }
 
 # Scheduled retry

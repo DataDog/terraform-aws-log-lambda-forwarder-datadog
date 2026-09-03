@@ -4,14 +4,16 @@ data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
 # Fetch version mapping from public S3 bucket
-data "http" "forwarder_versions" {
-  url = "https://datadog-opensource-asset-versions.s3.us-east-1.amazonaws.com/forwarder/versions.json"
+data "aws_s3_object" "forwarder_versions" {
+  bucket = "datadog-opensource-asset-versions"
+  key    = "forwarder/versions.json"
+  region = "us-east-1"
 }
 
 # Local values
 locals {
   # Parse version mapping from S3
-  version_data = jsondecode(data.http.forwarder_versions.response_body)
+  version_data = jsondecode(data.aws_s3_object.forwarder_versions.body)
 
   # Determine layer version: use latest or specified version
   layer_version = var.layer_version == "latest" ? local.version_data.latest.layer_version : var.layer_version

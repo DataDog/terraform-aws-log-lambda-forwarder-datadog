@@ -101,6 +101,28 @@ resource "aws_iam_role_policy" "forwarder_policy" {
         }
       ],
 
+      # KMS permissions for Cloudwatch log group
+      var.log_group_kms_key_arn == null ? [] : [
+        {
+          Effect = "Allow"
+          Action = [
+            "kms:Encrypt",
+            "kms:ReEncrypt*",
+            "kms:Decrypt",
+            "kms:GenerateDataKey",
+            "kms:Describe*"
+          ]
+          Resource = var.log_group_kms_key_arn
+          Condition = {
+            StringEquals = {
+              "kms:ViaService" = [
+                "logs.${var.region}.amazonaws.com"
+              ]
+            }
+          }
+        }
+      ],
+
       # Secrets Manager permissions
       var.dd_api_key_ssm_parameter_name == null && var.dd_api_key_secret_arn != null ? [
         {

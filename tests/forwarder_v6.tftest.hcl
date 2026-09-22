@@ -30,19 +30,14 @@ variables {
 override_data {
   target = data.http.forwarder_versions[0]
   values = {
-    response_body = jsonencode({
-      latest   = { layer_version = "97", forwarder_version = "5.3.0" }
-      mappings = { "92" = "5.1.0" }
-    })
+    response_body = "{\"latest\":{\"layer_version\":\"97\",\"forwarder_version\":\"5.3.0\"},\"mappings\":{\"92\":\"5.1.0\"}}"
   }
 }
 
 override_data {
   target = data.http.forwarder_zip_versions[0]
   values = {
-    response_body = jsonencode({
-      latest = { forwarder_version = "6.0.0-rc.1", release_date = "2026-09-15" }
-    })
+    response_body = "{\"latest\":{\"forwarder_version\":\"6.0.0-rc.1\",\"release_date\":\"2026-09-15\"}}"
   }
 }
 

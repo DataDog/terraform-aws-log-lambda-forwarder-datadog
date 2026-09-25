@@ -369,7 +369,7 @@ resource "aws_cloudwatch_log_group" "forwarder_log_group" {
 
   lifecycle {
     precondition {
-      condition     = var.log_group_kms_key_arn == null || split(":", var.log_group_kms_key_arn)[3] == local.region
+      condition     = var.log_group_kms_key_arn == null ? true : split(":", var.log_group_kms_key_arn)[3] == local.region
       error_message = "log_group_kms_key_arn must be a key in the same region as the forwarder (${local.region})."
     }
   }

@@ -27,9 +27,18 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   policy_arn = "arn:${var.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# Only a forwarder deployed in a VPC needs the network-interface permissions this policy grants.
 resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
+  count = var.dd_use_vpc ? 1 : 0
+
   role       = aws_iam_role.forwarder_role.name
   policy_arn = "arn:${var.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+# Existing VPC deployments keep their attachment under the new indexed address.
+moved {
+  from = aws_iam_role_policy_attachment.lambda_vpc_access
+  to   = aws_iam_role_policy_attachment.lambda_vpc_access[0]
 }
 
 # IAM Policy for the Forwarder

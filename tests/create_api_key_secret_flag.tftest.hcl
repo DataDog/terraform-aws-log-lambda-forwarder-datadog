@@ -42,9 +42,9 @@ run "explicit_false_with_secret_arn" {
   }
 
   override_data {
-    target = data.http.forwarder_versions
+    target = data.aws_s3_object.forwarder_versions
     values = {
-      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 
@@ -71,9 +71,9 @@ run "explicit_false_with_ssm_parameter" {
   }
 
   override_data {
-    target = data.http.forwarder_versions
+    target = data.aws_s3_object.forwarder_versions
     values = {
-      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 
@@ -95,9 +95,9 @@ run "explicit_true_creates_secret" {
   }
 
   override_data {
-    target = data.http.forwarder_versions
+    target = data.aws_s3_object.forwarder_versions
     values = {
-      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 
@@ -119,9 +119,9 @@ run "null_flag_auto_creates_secret_from_api_key" {
   }
 
   override_data {
-    target = data.http.forwarder_versions
+    target = data.aws_s3_object.forwarder_versions
     values = {
-      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 
@@ -140,9 +140,9 @@ run "null_flag_auto_skips_secret_with_external_arn" {
   }
 
   override_data {
-    target = data.http.forwarder_versions
+    target = data.aws_s3_object.forwarder_versions
     values = {
-      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 
@@ -169,6 +169,13 @@ run "flag_false_without_arn_fails_validation" {
   expect_failures = [
     var.create_dd_api_key_secret
   ]
+
+  override_data {
+    target = data.aws_s3_object.forwarder_versions
+    values = {
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+    }
+  }
 }
 
 # flag=true requires dd_api_key — omitting it should fail validation
@@ -184,6 +191,13 @@ run "flag_true_without_api_key_fails_validation" {
   expect_failures = [
     var.create_dd_api_key_secret
   ]
+
+  override_data {
+    target = data.aws_s3_object.forwarder_versions
+    values = {
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+    }
+  }
 }
 
 # Invalid Secrets Manager ARN format should be rejected
@@ -197,6 +211,13 @@ run "invalid_secret_arn_format_fails_validation" {
   expect_failures = [
     var.dd_api_key_secret_arn
   ]
+
+  override_data {
+    target = data.aws_s3_object.forwarder_versions
+    values = {
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+    }
+  }
 }
 
 # Invalid SSM parameter name (missing leading slash) should be rejected
@@ -210,6 +231,13 @@ run "invalid_ssm_parameter_name_fails_validation" {
   expect_failures = [
     var.dd_api_key_ssm_parameter_name
   ]
+
+  override_data {
+    target = data.aws_s3_object.forwarder_versions
+    values = {
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+    }
+  }
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -230,6 +258,13 @@ run "api_key_and_secret_arn_conflict_warns" {
   expect_failures = [
     check.dd_api_key_not_used_with_secret_arn
   ]
+
+  override_data {
+    target = data.aws_s3_object.forwarder_versions
+    values = {
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+    }
+  }
 }
 
 # dd_api_key + dd_api_key_ssm_parameter_name should warn
@@ -244,6 +279,13 @@ run "api_key_and_ssm_parameter_conflict_warns" {
   expect_failures = [
     check.dd_api_key_not_used_with_ssm_parameter
   ]
+
+  override_data {
+    target = data.aws_s3_object.forwarder_versions
+    values = {
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+    }
+  }
 }
 
 # dd_api_key_secret_arn + dd_api_key_ssm_parameter_name should warn
@@ -258,4 +300,11 @@ run "secret_arn_and_ssm_parameter_conflict_warns" {
   expect_failures = [
     check.dd_secret_arn_not_used_with_ssm_parameter
   ]
+
+  override_data {
+    target = data.aws_s3_object.forwarder_versions
+    values = {
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+    }
+  }
 }

@@ -22,9 +22,9 @@ run "external_secret_plan_succeeds" {
   command = plan
 
   override_data {
-    target = module.datadog_forwarder.data.http.forwarder_versions
+    target = module.datadog_forwarder.data.aws_s3_object.forwarder_versions
     values = {
-      response_body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
+      body = "{\"latest\":{\"layer_version\":\"92\",\"forwarder_version\":\"5.1.0\"},\"mappings\":{}}"
     }
   }
 

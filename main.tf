@@ -19,9 +19,9 @@ module "iam" {
   dd_allowed_kms_keys               = var.dd_allowed_kms_keys
   log_group_kms_key_arn             = var.log_group_kms_key_arn
   dd_s3_log_bucket_arns             = var.dd_s3_log_bucket_arns
-  dd_fetch_lambda_tags              = var.dd_fetch_lambda_tags
-  dd_fetch_log_group_tags           = var.dd_fetch_log_group_tags
-  dd_fetch_s3_tags                  = var.dd_fetch_s3_tags
+  dd_fetch_lambda_tags              = var.use_v6 ? null : var.dd_fetch_lambda_tags
+  dd_fetch_log_group_tags           = var.use_v6 ? null : var.dd_fetch_log_group_tags
+  dd_fetch_s3_tags                  = var.use_v6 ? null : var.dd_fetch_s3_tags
   dd_use_vpc                        = var.dd_use_vpc
   additional_target_lambda_arns     = var.additional_target_lambda_arns != null ? split(",", var.additional_target_lambda_arns) : []
   sqs_queue_arn                     = local.sqs_queue_arn
@@ -196,22 +196,22 @@ resource "aws_lambda_function" "forwarder" {
   region = local.region
 
   function_name = var.function_name
-  description   = "Pushes logs, metrics and traces from AWS to Datadog."
+  description   = var.use_v6 ? "Pushes logs from AWS to Datadog." : "Pushes logs, metrics and traces from AWS to Datadog."
   role          = local.iam_role_arn
-  handler       = "lambda_function.lambda_handler"
-  runtime       = var.layer_version == "latest" ? "python3.14" : (can(tonumber(var.layer_version)) && tonumber(var.layer_version) >= 94 ? "python3.14" : "python3.13")
+  handler       = var.use_v6 ? "bootstrap" : "lambda_function.lambda_handler"
+  runtime       = var.use_v6 ? "provided.al2023" : (var.layer_version == "latest" ? "python3.14" : (can(tonumber(var.layer_version)) && tonumber(var.layer_version) >= 94 ? "python3.14" : "python3.13"))
   architectures = ["arm64"]
   memory_size   = var.memory_size
   timeout       = var.timeout
 
-  # Use Lambda layer
-  layers = concat(
+  layers = var.use_v6 ? var.additional_layers : concat(
     [var.layer_arn != null ? var.layer_arn : local.default_layer_arn],
     var.additional_layers
   )
 
-  # Static placeholder zip file for layer-based installation
-  filename = local.placeholder_zip_path
+  filename  = var.use_v6 ? null : local.placeholder_zip_path
+  s3_bucket = var.use_v6 ? local.artifact_bucket : null
+  s3_key    = var.use_v6 ? local.artifact_key : null
 
   reserved_concurrent_executions = var.reserved_concurrency != null ? tonumber(var.reserved_concurrency) : null
 
@@ -226,58 +226,8 @@ resource "aws_lambda_function" "forwarder" {
 
   environment {
     variables = merge(
-      {
-        DD_SITE                   = var.dd_site
-        DD_TAGS_CACHE_TTL_SECONDS = tostring(var.tags_cache_ttl_seconds)
-        DD_USE_VPC                = tostring(var.dd_use_vpc)
-        DD_TRACE_ENABLED          = tostring(var.dd_trace_enabled)
-      },
-      # API key configuration
-      var.dd_api_key_ssm_parameter_name != null ? {
-        DD_API_KEY_SSM_NAME = var.dd_api_key_ssm_parameter_name
-        } : {
-        DD_API_KEY_SECRET_ARN = local.effective_secret_arn
-      },
-      # S3 bucket name
-      local.create_s3_bucket || var.dd_forwarder_existing_bucket_name != null ? {
-        DD_S3_BUCKET_NAME = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].id : var.dd_forwarder_existing_bucket_name
-      } : {},
-      # Optional environment variables
-      {
-        DD_TAGS                         = var.dd_tags
-        DD_SOURCE                       = var.dd_source
-        DD_ENRICH_S3_TAGS               = var.dd_enrich_s3_tags != null ? tostring(var.dd_enrich_s3_tags) : null
-        DD_ENRICH_CLOUDWATCH_TAGS       = var.dd_enrich_cloudwatch_tags != null ? tostring(var.dd_enrich_cloudwatch_tags) : null
-        DD_FETCH_LAMBDA_TAGS            = var.dd_fetch_lambda_tags != null ? tostring(var.dd_fetch_lambda_tags) : null
-        DD_FETCH_LOG_GROUP_TAGS         = var.dd_fetch_log_group_tags != null ? tostring(var.dd_fetch_log_group_tags) : null
-        DD_FETCH_S3_TAGS                = var.dd_fetch_s3_tags != null ? tostring(var.dd_fetch_s3_tags) : null
-        DD_NO_SSL                       = var.dd_no_ssl
-        DD_URL                          = var.dd_url
-        DD_PORT                         = var.dd_port
-        DD_STORE_FAILED_EVENTS          = local.store_failed_events_enabled ? "true" : null
-        DD_SQS_QUEUE_URL                = var.dd_sqs_queue_url
-        REDACT_IP                       = var.redact_ip != null ? tostring(var.redact_ip) : null
-        REDACT_EMAIL                    = var.redact_email != null ? tostring(var.redact_email) : null
-        DD_SCRUBBING_RULE               = var.dd_scrubbing_rule
-        DD_SCRUBBING_RULE_REPLACEMENT   = var.dd_scrubbing_rule_replacement
-        EXCLUDE_AT_MATCH                = var.exclude_at_match
-        INCLUDE_AT_MATCH                = var.include_at_match
-        DD_MULTILINE_LOG_REGEX_PATTERN  = var.dd_multiline_log_regex_pattern
-        DD_SKIP_SSL_VALIDATION          = var.dd_skip_ssl_validation != null ? tostring(var.dd_skip_ssl_validation) : null
-        DD_FORWARD_LOG                  = var.dd_forward_log != null ? tostring(var.dd_forward_log) : null
-        DD_STEP_FUNCTIONS_TRACE_ENABLED = var.dd_step_functions_trace_enabled != null ? tostring(var.dd_step_functions_trace_enabled) : null
-        DD_USE_COMPRESSION              = var.dd_use_compression != null ? tostring(var.dd_use_compression) : null
-        DD_ENHANCED_METRICS             = tostring(var.dd_enhanced_metrics)
-        DD_COMPRESSION_LEVEL            = var.dd_compression_level
-        DD_MAX_WORKERS                  = var.dd_max_workers
-        HTTP_PROXY                      = var.dd_http_proxy_url
-        HTTPS_PROXY                     = var.dd_http_proxy_url
-        NO_PROXY                        = var.dd_no_proxy
-        DD_ADDITIONAL_TARGET_LAMBDAS    = var.additional_target_lambda_arns
-        DD_API_URL                      = var.dd_api_url
-        DD_TRACE_INTAKE_URL             = var.dd_trace_intake_url
-        DD_LOG_LEVEL                    = var.dd_log_level
-      },
+      local.env_common,
+      var.use_v6 ? {} : local.env_prior_v6,
       var.additional_environment_variables
     )
   }

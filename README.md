@@ -43,6 +43,20 @@ module "datadog_forwarder" {
 
 The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environment variables automatically. `additional_environment_variables` are merged last, so they take precedence over built-in variables on conflict.
 
+### Deploying the v6
+
+Set `use_v6 = true` to deploy the v6 major version:
+
+```hcl
+module "datadog_forwarder" {
+  source  = "DataDog/log-lambda-forwarder-datadog/aws"
+
+  dd_api_key_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:dd-api-key"
+
+  use_v6 = true
+}
+```
+
 ## Requirements
 
 | Name      | Version  |
@@ -89,6 +103,9 @@ The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environme
 | layer_arn             | Custom layer ARN (optional)                                                                                                                                                       | `string`      | `null`               |
 | additional_layers     | Additional Lambda layers to attach to the forwarder function (e.g., [Datadog Lambda Extension](https://github.com/DataDog/datadog-lambda-extension))                              | `list(string)` | `[]`                |
 | additional_environment_variables | Additional environment variables to set on the forwarder Lambda (e.g., `DD_TRACE_SAMPLING_RULES` for the [Datadog Lambda Extension](https://github.com/DataDog/datadog-lambda-extension)). Merged last, so these take precedence over built-in variables on conflict. | `map(string)`  | `{}`                |
+| use_v6                | Deploy the v6 major version, which is **logs-only** — send metrics and traces via the [Datadog Lambda Extension](https://github.com/DataDog/datadog-lambda-extension). See [Deploying the v6](#deploying-the-v6). | `bool`        | `false`              |
+| zip_bucket            | Name of the S3 bucket holding the forwarder artifact. Defaults to the Datadog-published bucket for `region`. Do not change unless you know what you're doing.                      | `string`      | `null`               |
+| zip_version           | Version of the forwarder to deploy, or `latest` to track the most recent release.                                                                                                 | `string`      | `"latest"`           |
 | existing_iam_role_arn | ARN of existing IAM role to use for the Lambda function. When using an existing role, you must provide either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name`, and you are responsible for ensuring the role has the necessary permissions for any resources the module creates. See [Using an Existing IAM Role](#using-an-existing-iam-role) for details. | `string`      | `null`               |
 | tags                  | Resource tags                                                                                                                                                                     | `map(string)` | `{}`                 |
 

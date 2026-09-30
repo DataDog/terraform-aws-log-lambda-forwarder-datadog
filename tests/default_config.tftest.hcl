@@ -17,6 +17,14 @@ mock_provider "aws" {
       partition = "aws"
     }
   }
+
+  mock_data "aws_lambda_layer_version" {
+    defaults = {
+      compatible_runtimes = [
+        "python3.14",
+      ]
+    }
+  }
 }
 
 variables {
@@ -188,4 +196,3 @@ run "environment_variables_test" {
     error_message = "DD_API_KEY_SSM_NAME should not be present when using Secrets Manager"
   }
 }
-

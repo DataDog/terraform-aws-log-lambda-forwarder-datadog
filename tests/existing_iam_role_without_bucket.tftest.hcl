@@ -20,6 +20,14 @@ mock_provider "aws" {
       partition = "aws"
     }
   }
+
+  mock_data "aws_lambda_layer_version" {
+    defaults = {
+      compatible_runtimes = [
+        "python3.14",
+      ]
+    }
+  }
 }
 
 # Test: existing IAM role with SSM parameter (no bucket specified) - should work

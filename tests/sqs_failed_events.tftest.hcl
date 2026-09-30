@@ -18,6 +18,14 @@ mock_provider "aws" {
       partition = "aws"
     }
   }
+
+  mock_data "aws_lambda_layer_version" {
+    defaults = {
+      compatible_runtimes = [
+        "python3.14",
+      ]
+    }
+  }
 }
 
 # Test: SQS URL auto-enables DD_STORE_FAILED_EVENTS and skips S3 bucket creation

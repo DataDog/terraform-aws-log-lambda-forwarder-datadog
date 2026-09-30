@@ -17,6 +17,14 @@ mock_provider "aws" {
       partition = "aws"
     }
   }
+
+  mock_data "aws_lambda_layer_version" {
+    defaults = {
+      compatible_runtimes = [
+        "python3.14",
+      ]
+    }
+  }
 }
 
 # Test: Default behavior - s3:GetObject should allow all buckets for backward compatibility

@@ -23,6 +23,14 @@ mock_provider "aws" {
       dns_suffix = "amazonaws.com"
     }
   }
+
+  mock_data "aws_lambda_layer_version" {
+    defaults = {
+      compatible_runtimes = [
+        "python3.14",
+      ]
+    }
+  }
 }
 
 variables {

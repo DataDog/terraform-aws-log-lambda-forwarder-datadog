@@ -210,6 +210,24 @@ variable "additional_environment_variables" {
   description = "Additional environment variables to set on the forwarder Lambda function (e.g., DD_TRACE_SAMPLING_RULES for the Datadog Lambda Extension). Merged after all built-in variables, so these take precedence on conflict."
 }
 
+variable "use_v6" {
+  type        = bool
+  default     = false
+  description = "Deploy the v6."
+}
+
+variable "zip_bucket" {
+  type        = string
+  default     = null
+  description = "Name of the S3 bucket holding the forwarder zip artifact. Do not change unless you know what you're doing."
+}
+
+variable "zip_version" {
+  type        = string
+  default     = "latest"
+  description = "Version of the forwarder, starting from v6."
+}
+
 # Datadog configuration
 variable "dd_tags" {
   type        = string

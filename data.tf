@@ -200,6 +200,10 @@ check "v6_unsupported_environment_variables_have_no_effect" {
     error_message = "dd_max_workers has no effect with v6: concurrency is managed internally. Remove it to silence this warning."
   }
   assert {
+    condition     = !var.use_v6 || var.tags_cache_ttl_seconds == 300
+    error_message = "tags_cache_ttl_seconds has no effect with v6: tag enrichment is handled by the Datadog backend, so there is no tag cache to expire. Remove it to silence this warning."
+  }
+  assert {
     condition     = !var.use_v6 || var.dd_forward_log == null
     error_message = "dd_forward_log has no effect with v6: it only forwards logs. Remove it to silence this warning."
   }

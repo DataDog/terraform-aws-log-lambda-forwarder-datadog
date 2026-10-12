@@ -130,3 +130,29 @@ run "v6_unsupported_env_vars_trip_the_check" {
     check.v6_unsupported_environment_variables_have_no_effect,
   ]
 }
+
+run "v6_tags_cache_ttl_trips_the_check" {
+  command = plan
+
+  variables {
+    use_v6                 = true
+    tags_cache_ttl_seconds = 600
+  }
+
+  expect_failures = [
+    check.v6_unsupported_environment_variables_have_no_effect,
+  ]
+}
+
+run "v6_default_tags_cache_ttl_is_silent" {
+  command = plan
+
+  variables {
+    use_v6 = true
+  }
+
+  assert {
+    condition     = !contains(keys(aws_lambda_function.forwarder.environment[0].variables), "DD_TAGS_CACHE_TTL_SECONDS")
+    error_message = "v6 must not set DD_TAGS_CACHE_TTL_SECONDS"
+  }
+}

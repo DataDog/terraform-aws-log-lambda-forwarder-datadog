@@ -216,3 +216,14 @@ check "v6_unsupported_environment_variables_have_no_effect" {
     error_message = "dd_enhanced_metrics has no effect with v6: it forwards logs only. Use the Datadog Lambda Extension for enhanced metrics. Set it to false to silence this warning."
   }
 }
+
+check "v6_unsupported_layer_inputs_have_no_effect" {
+  assert {
+    condition     = !var.use_v6 || var.layer_version == "latest"
+    error_message = "layer_version has no effect with v6: the forwarder code ships as a zip artifact, not a Lambda layer. Use zip_version to pin the version. Remove it to silence this warning."
+  }
+  assert {
+    condition     = !var.use_v6 || var.layer_arn == null
+    error_message = "layer_arn has no effect with v6: the forwarder code ships as a zip artifact, so there is no code layer to override. Remove it to silence this warning."
+  }
+}

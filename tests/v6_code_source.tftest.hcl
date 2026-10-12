@@ -124,3 +124,43 @@ run "v6_keeps_additional_layers" {
     error_message = "v6 must attach additional_layers and nothing else"
   }
 }
+
+run "v6_pinned_layer_version_trips_the_check" {
+  command = plan
+
+  variables {
+    use_v6        = true
+    layer_version = "97"
+  }
+
+  expect_failures = [
+    check.v6_unsupported_layer_inputs_have_no_effect,
+  ]
+}
+
+run "v6_layer_arn_trips_the_check" {
+  command = plan
+
+  variables {
+    use_v6    = true
+    layer_arn = "arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Forwarder:97"
+  }
+
+  expect_failures = [
+    check.v6_unsupported_layer_inputs_have_no_effect,
+  ]
+}
+
+run "v5_layer_inputs_do_not_trip_the_check" {
+  command = plan
+
+  variables {
+    layer_version = "97"
+    layer_arn     = "arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Forwarder:97"
+  }
+
+  assert {
+    condition     = contains(aws_lambda_function.forwarder.layers, "arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Forwarder:97")
+    error_message = "v5 must still honor layer_arn"
+  }
+}

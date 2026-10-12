@@ -266,6 +266,10 @@ resource "aws_lambda_function" "forwarder" {
 }
 
 resource "aws_lambda_function_event_invoke_config" "forwarder_invoke_config" {
+  count = var.use_v6 ? 1 : 0
+
+  region = local.region
+
   function_name = aws_lambda_function.forwarder.function_name
 
   maximum_retry_attempts = 0

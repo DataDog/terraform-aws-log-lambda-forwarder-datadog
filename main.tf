@@ -11,7 +11,7 @@ module "iam" {
   region                            = local.region
   account_id                        = data.aws_caller_identity.current.account_id
   tags                              = var.tags
-  s3_bucket_permissions             = var.dd_forwarder_existing_bucket_name != null || local.create_s3_bucket
+  s3_bucket_permissions             = local.forwarder_bucket_permissions
   forwarder_bucket_arn              = local.create_s3_bucket ? aws_s3_bucket.forwarder_bucket[0].arn : null
   dd_forwarder_existing_bucket_name = var.dd_forwarder_existing_bucket_name
   dd_api_key_ssm_parameter_name     = var.dd_api_key_ssm_parameter_name

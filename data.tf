@@ -56,6 +56,8 @@ locals {
 
   dd_s3_bucket_name = var.use_v6 ? (local.store_failed_events_enabled ? local.s3_bucket_name : null) : local.s3_bucket_name
 
+  forwarder_bucket_permissions = (local.create_s3_bucket || var.dd_forwarder_existing_bucket_name != null) && (!var.use_v6 || local.store_failed_events_enabled)
+
   # Account ID varies by partition
   dd_account_id = data.aws_partition.current.partition == "aws-us-gov" ? "002406178527" : "464622532012"
 
@@ -107,6 +109,7 @@ locals {
       DD_URL                          = var.dd_url
       DD_PORT                         = var.dd_port
       DD_SQS_QUEUE_URL                = var.dd_sqs_queue_url
+      DD_STORE_FAILED_EVENTS          = local.store_failed_events_enabled ? "true" : null
       DD_SKIP_SSL_VALIDATION          = var.dd_skip_ssl_validation != null ? tostring(var.dd_skip_ssl_validation) : null
       DD_COMPRESSION_LEVEL            = var.dd_compression_level
       DD_SCRUBBING_RULE               = var.dd_scrubbing_rule
@@ -136,14 +139,13 @@ locals {
     DD_FETCH_LAMBDA_TAGS      = var.dd_fetch_lambda_tags != null ? tostring(var.dd_fetch_lambda_tags) : null
     DD_FETCH_LOG_GROUP_TAGS   = var.dd_fetch_log_group_tags != null ? tostring(var.dd_fetch_log_group_tags) : null
     DD_FETCH_S3_TAGS          = var.dd_fetch_s3_tags != null ? tostring(var.dd_fetch_s3_tags) : null
-    DD_STORE_FAILED_EVENTS    = local.store_failed_events_enabled ? "true" : null
     DD_USE_COMPRESSION        = var.dd_use_compression != null ? tostring(var.dd_use_compression) : null
     DD_MAX_WORKERS            = var.dd_max_workers
     DD_FORWARD_LOG            = var.dd_forward_log != null ? tostring(var.dd_forward_log) : null
     DD_TRACE_INTAKE_URL       = var.dd_trace_intake_url
   }
 
-  artifact_bucket = var.use_v6 ? coalesce(var.zip_bucket, "datadog-log-forwarder-${local.region}") : null
+  artifact_bucket = var.use_v6 ? coalesce(var.zip_bucket, "datadog-log-forwarder-prod-${local.region}") : null
   artifact_key    = var.use_v6 ? "aws-dd-forwarder-${local.zip_version}.zip" : null
 }
 

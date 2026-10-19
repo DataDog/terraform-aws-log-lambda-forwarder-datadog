@@ -110,7 +110,7 @@ variable "dd_site" {
   description = "Define your Datadog Site to send data to."
 
   validation {
-    condition     = var.skip_dd_site_validation || contains(["datadoghq.com", "datadoghq.eu", "us3.datadoghq.com", "us5.datadoghq.com", "ap1.datadoghq.com", "ap2.datadoghq.com", "uk1.datadoghq.com", "ddog-gov.com", "us2.ddog-gov.com"], var.dd_site)
+    condition     = var.skip_dd_site_validation || contains(["datadoghq.com", "datadoghq.eu", "us3.datadoghq.com", "us5.datadoghq.com", "ap1.datadoghq.com", "ap2.datadoghq.com", "uk1.datadoghq.com", "ddog-gov.com", "us2.ddog-gov.com", "datad0g.com"], var.dd_site)
     error_message = "dd_site must be one of: datadoghq.com, datadoghq.eu, us3.datadoghq.com, us5.datadoghq.com, ap1.datadoghq.com, ap2.datadoghq.com, uk1.datadoghq.com, ddog-gov.com, us2.ddog-gov.com."
   }
 }
@@ -219,7 +219,7 @@ variable "use_v6" {
 variable "zip_bucket" {
   type        = string
   default     = null
-  description = "Name of the S3 bucket holding the forwarder zip artifact. Do not change unless you know what you're doing."
+  description = "Name of the S3 bucket holding the forwarder zip artifact. Defaults to the Datadog-published bucket for the target region. Internal only."
 }
 
 variable "zip_version" {

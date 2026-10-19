@@ -51,8 +51,8 @@ run "zip_version_latest_resolves_through_manifest" {
   }
 
   assert {
-    condition     = aws_lambda_function.forwarder.s3_bucket == "datadog-log-forwarder-us-east-1"
-    error_message = "v6 bucket must default to datadog-log-forwarder-{region}"
+    condition     = aws_lambda_function.forwarder.s3_bucket == "datadog-log-forwarder-prod-us-east-1"
+    error_message = "v6 bucket must default to datadog-log-forwarder-prod-{region}"
   }
 
   assert {
@@ -74,7 +74,7 @@ run "zip_bucket_follows_region" {
   }
 
   assert {
-    condition     = aws_lambda_function.forwarder.s3_bucket == "datadog-log-forwarder-eu-west-1"
+    condition     = aws_lambda_function.forwarder.s3_bucket == "datadog-log-forwarder-prod-eu-west-1"
     error_message = "v6 bucket must follow local.region, not the provider region"
   }
 }

@@ -59,7 +59,7 @@ run "v6_drops_v5_only_env_vars" {
 
   assert {
     condition = alltrue([
-      for k in ["DD_TRACE_ENABLED", "DD_ENHANCED_METRICS", "DD_USE_VPC", "DD_FETCH_LAMBDA_TAGS", "DD_FETCH_LOG_GROUP_TAGS", "DD_FETCH_S3_TAGS", "DD_ENRICH_S3_TAGS", "DD_ENRICH_CLOUDWATCH_TAGS", "DD_TAGS_CACHE_TTL_SECONDS", "DD_STORE_FAILED_EVENTS", "DD_TRACE_INTAKE_URL", "DD_MAX_WORKERS", "DD_USE_COMPRESSION", "DD_FORWARD_LOG"] :
+      for k in ["DD_TRACE_ENABLED", "DD_ENHANCED_METRICS", "DD_USE_VPC", "DD_FETCH_LAMBDA_TAGS", "DD_FETCH_LOG_GROUP_TAGS", "DD_FETCH_S3_TAGS", "DD_ENRICH_S3_TAGS", "DD_ENRICH_CLOUDWATCH_TAGS", "DD_TAGS_CACHE_TTL_SECONDS", "DD_TRACE_INTAKE_URL", "DD_MAX_WORKERS", "DD_USE_COMPRESSION", "DD_FORWARD_LOG"] :
       !contains(keys(aws_lambda_function.forwarder.environment[0].variables), k)
     ])
     error_message = "v6 must not set v5-only environment variables"

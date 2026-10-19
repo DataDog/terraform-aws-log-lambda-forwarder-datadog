@@ -43,20 +43,6 @@ module "datadog_forwarder" {
 
 The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environment variables automatically. `additional_environment_variables` are merged last, so they take precedence over built-in variables on conflict.
 
-### Deploying the v6
-
-Set `use_v6 = true` to deploy the v6 major version:
-
-```hcl
-module "datadog_forwarder" {
-  source  = "DataDog/log-lambda-forwarder-datadog/aws"
-
-  dd_api_key_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:dd-api-key"
-
-  use_v6 = true
-}
-```
-
 ## Requirements
 
 | Name      | Version  |
@@ -168,8 +154,8 @@ module "datadog_forwarder" {
 | dd_compression_level              | Compression level (0-9)                                  | `string` | `null`  |
 | dd_max_workers                    | Max concurrent workers                                   | `string` | `null`  |
 | dd_log_level                      | Log level                                                | `string` | `null`  |
-| dd_store_failed_events            | Store failed events in S3                                | `bool`   | `null`  |
-| dd_sqs_queue_url                  | SQS queue URL for failed event storage (requires layer version >= 97; takes priority over S3 when set, auto-enables `dd_store_failed_events`) | `string` | `null`  |
+| dd_store_failed_events            | Store events that failed to reach Datadog (in S3, or in SQS when `dd_sqs_queue_url` is set) | `bool`   | `null`  |
+| dd_sqs_queue_url                  | SQS queue URL for failed event storage (takes priority over S3 when set, auto-enables `dd_store_failed_events`; with `use_v6 = false` requires layer version >= 97) | `string` | `null`  |
 | dd_schedule_retry_failed_events   | Periodically retry failed events (via AWS EventBridge)   | `bool`   | `null`  |
 | dd_schedule_retry_interval        | Retry interval in hours for failed events                | `number` | `6`     |
 | dd_forwarder_bucket_name          | Custom S3 bucket name                                    | `string` | `null`  |
@@ -386,7 +372,7 @@ module "datadog_forwarder" {
 
 ## Scheduled retry
 
-When you enable `dd_store_failed_events`, the Lambda forwarder stores any events that couldn’t be sent to Datadog in an S3 bucket. These events can be logs, metrics, or traces. They aren’t automatically re‑processed on each Lambda invocation; instead, you must trigger a [manual Lambda run](https://docs.datadoghq.com/logs/guide/forwarder/?tab=manual) to process them again.
+When you enable `dd_store_failed_events`, the Lambda forwarder stores any events that couldn’t be sent to Datadog in an S3 bucket or in an SQS queue. They aren’t automatically re‑processed on each Lambda invocation; instead, you must trigger a [manual Lambda run](https://docs.datadoghq.com/logs/guide/forwarder/?tab=manual) to process them again.
 
 You can automate this re‑processing by enabling `dd_schedule_retry_failed_events` parameter, creating a scheduled Lambda invocation through [AWS EventBridge](https://docs.aws.amazon.com/lambda/latest/dg/with-eventbridge-scheduler.html). By default, the forwarder attempts re‑processing every six hours.
 

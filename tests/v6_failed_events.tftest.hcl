@@ -64,6 +64,16 @@ run "v6_tag_fetch_flags_create_no_bucket" {
     condition     = aws_lambda_function.forwarder.environment[0].variables["DD_S3_BUCKET_NAME"] == null
     error_message = "v6 must not set DD_S3_BUCKET_NAME when only tag fetching was requested"
   }
+
+  assert {
+    condition     = aws_lambda_function.forwarder.environment[0].variables["DD_STORE_FAILED_EVENTS"] == null
+    error_message = "v6 must not set DD_STORE_FAILED_EVENTS when failed-event storage was not requested"
+  }
+
+  assert {
+    condition     = local.forwarder_bucket_permissions == false
+    error_message = "v6 must not grant bucket permissions when no bucket is created"
+  }
 }
 
 run "v6_store_failed_events_creates_bucket" {
@@ -91,6 +101,16 @@ run "v6_store_failed_events_creates_bucket" {
     condition     = aws_lambda_function.forwarder.environment[0].variables["DD_S3_BUCKET_NAME"] == "module-created-bucket"
     error_message = "v6 must pass the created bucket's name as DD_S3_BUCKET_NAME"
   }
+
+  assert {
+    condition     = aws_lambda_function.forwarder.environment[0].variables["DD_STORE_FAILED_EVENTS"] == "true"
+    error_message = "v6 must set DD_STORE_FAILED_EVENTS when failed-event storage is requested"
+  }
+
+  assert {
+    condition     = local.forwarder_bucket_permissions == true
+    error_message = "v6 must grant bucket permissions for the module-created failed-events bucket"
+  }
 }
 
 run "v6_sqs_supersedes_bucket" {
@@ -116,6 +136,16 @@ run "v6_sqs_supersedes_bucket" {
     condition     = aws_lambda_function.forwarder.environment[0].variables["DD_SQS_QUEUE_URL"] == "https://sqs.us-east-1.amazonaws.com/123456789012/my-failed-events-queue"
     error_message = "v6 must pass DD_SQS_QUEUE_URL"
   }
+
+  assert {
+    condition     = aws_lambda_function.forwarder.environment[0].variables["DD_STORE_FAILED_EVENTS"] == "true"
+    error_message = "v6 must set DD_STORE_FAILED_EVENTS when an SQS queue is configured"
+  }
+
+  assert {
+    condition     = local.forwarder_bucket_permissions == false
+    error_message = "v6 must not grant bucket permissions when the failure sink is SQS"
+  }
 }
 
 run "v6_existing_bucket_without_storage" {
@@ -131,6 +161,16 @@ run "v6_existing_bucket_without_storage" {
     condition     = aws_lambda_function.forwarder.environment[0].variables["DD_S3_BUCKET_NAME"] == null
     error_message = "v6 must not set DD_S3_BUCKET_NAME when failed-event storage was not requested"
   }
+
+  assert {
+    condition     = aws_lambda_function.forwarder.environment[0].variables["DD_STORE_FAILED_EVENTS"] == null
+    error_message = "v6 must not set DD_STORE_FAILED_EVENTS when failed-event storage was not requested"
+  }
+
+  assert {
+    condition     = local.forwarder_bucket_permissions == false
+    error_message = "v6 must not grant permissions on an existing bucket it never passes to the function"
+  }
 }
 
 run "v6_existing_bucket_with_storage" {
@@ -145,6 +185,16 @@ run "v6_existing_bucket_with_storage" {
   assert {
     condition     = aws_lambda_function.forwarder.environment[0].variables["DD_S3_BUCKET_NAME"] == "my-existing-bucket"
     error_message = "v6 must set DD_S3_BUCKET_NAME when failed-event storage is requested"
+  }
+
+  assert {
+    condition     = aws_lambda_function.forwarder.environment[0].variables["DD_STORE_FAILED_EVENTS"] == "true"
+    error_message = "v6 must set DD_STORE_FAILED_EVENTS when failed-event storage is requested"
+  }
+
+  assert {
+    condition     = local.forwarder_bucket_permissions == true
+    error_message = "v6 must grant permissions on the existing failed-events bucket"
   }
 }
 

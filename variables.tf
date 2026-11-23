@@ -228,6 +228,15 @@ variable "zip_version" {
   description = "Version of the forwarder, starting from v6."
 }
 
+variable "fips" {
+  type        = bool
+  default     = null
+  description = <<-EOT
+    Use the FIPS 140-3 validated build of the forwarder. By default, it is enabled in the `aws-us-gov` partition and disabled in commercial.
+    Commercial partition regions supported are us-east-1, us-east-2, us-west-1, and us-west-2.
+  EOT
+}
+
 # Datadog configuration
 variable "dd_tags" {
   type        = string
@@ -505,8 +514,46 @@ variable "dd_schedule_retry_failed_events" {
 
 variable "dd_schedule_retry_interval" {
   type        = number
-  default     = 6
-  description = "Interval in hours for scheduled forwarder invocation (via AWS EventBridge)."
+  default     = null
+  description = "Retry interval for scheduled forwarder invocation (via AWS EventBridge). Interpreted in hours pre-v6 and in minutes under v6."
+
+  validation {
+    condition     = var.dd_schedule_retry_interval == null || var.dd_schedule_retry_interval > 0
+    error_message = "dd_schedule_retry_interval must be a positive number."
+  }
+
+  validation {
+    condition     = !var.use_v6 || var.dd_schedule_retry_interval == null || (var.dd_schedule_retry_interval >= 2 && var.dd_schedule_retry_interval <= 1080)
+    error_message = "dd_schedule_retry_interval must be between 2 and 1080 minutes (18 hours) when use_v6 is true."
+  }
+}
+
+variable "async_max_retry_attempts" {
+  type        = number
+  default     = 0
+  description = "Maximum number of retry attempts Lambda makes on an asynchronous invocation failure before the event is dropped (or sent to async_failure_destination if set). Only applies when use_v6 is true."
+
+  validation {
+    condition     = var.async_max_retry_attempts >= 0 && var.async_max_retry_attempts <= 2
+    error_message = "async_max_retry_attempts must be between 0 and 2."
+  }
+}
+
+variable "async_failure_destination" {
+  type        = string
+  default     = null
+  description = "ARN of the SQS queue, SNS topic, Lambda function, or EventBridge event bus to receive the event when all asynchronous invocation retries are exhausted. Only applies when use_v6 is true."
+}
+
+variable "failed_events_retention_in_days" {
+  type        = number
+  default     = 30
+  description = "Number of days to retain failed-event objects in the forwarder's S3 bucket before they expire. Only applies when the forwarder bucket is created."
+
+  validation {
+    condition     = var.failed_events_retention_in_days >= 1
+    error_message = "failed_events_retention_in_days must be at least 1."
+  }
 }
 
 variable "dd_forwarder_existing_bucket_name" {

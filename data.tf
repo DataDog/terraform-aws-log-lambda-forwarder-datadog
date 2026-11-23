@@ -146,7 +146,13 @@ locals {
   }
 
   artifact_bucket = var.use_v6 ? coalesce(var.zip_bucket, "datadog-log-forwarder-prod-${local.region}") : null
-  artifact_key    = var.use_v6 ? "aws-dd-forwarder-${local.zip_version}.zip" : null
+  artifact_key    = var.use_v6 ? "aws-dd-forwarder-${local.zip_version}${local.effective_fips ? "-fips" : ""}.zip" : null
+
+  is_gov_partition      = data.aws_partition.current.partition == "aws-us-gov"
+  fips_eligible_regions = ["us-east-1", "us-east-2", "us-west-1", "us-west-2"]
+  effective_fips        = var.use_v6 ? (local.is_gov_partition || coalesce(var.fips, false)) : false
+
+  retry_interval_minutes = var.use_v6 ? coalesce(var.dd_schedule_retry_interval, 360) : coalesce(var.dd_schedule_retry_interval, 6) * 60
 }
 
 # Deprecation warnings for conflicting API key configurations.
@@ -227,5 +233,12 @@ check "v6_unsupported_layer_inputs_have_no_effect" {
   assert {
     condition     = !var.use_v6 || var.layer_arn == null
     error_message = "layer_arn has no effect with v6: the forwarder code ships as a zip artifact, so there is no code layer to override. Remove it to silence this warning."
+  }
+}
+
+check "fips_mandatory_in_govcloud" {
+  assert {
+    condition     = !(var.use_v6 && local.is_gov_partition && var.fips == false)
+    error_message = "fips is mandatory in the AWS GovCloud partition. fips = false will be ignored and the FIPS build will be used anyway. Remove it to silence this warning."
   }
 }

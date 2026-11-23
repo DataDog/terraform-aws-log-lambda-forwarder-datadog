@@ -92,6 +92,7 @@ The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environme
 | use_v6                | Deploy the v6 major version.                                                                                                                                                      | `bool`        | `false`              |
 | zip_bucket            | Name of the S3 bucket holding the forwarder artifact. Defaults to the Datadog-published bucket for `region`. Internal only.                      | `string`      | `null`               |
 | zip_version           | Version of the forwarder to deploy, or `latest` to track the most recent release.                                                                                                 | `string`      | `"latest"`           |
+| fips                  | Use the FIPS 140-3 validated build of the forwarder. By default, it is enabled in the `aws-us-gov` partition and disabled in commercial. Commercial partition regions supported are us-east-1, us-east-2, us-west-1, and us-west-2. | `bool`        | `null`               |
 | existing_iam_role_arn | ARN of existing IAM role to use for the Lambda function. When using an existing role, you must provide either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name`, and you are responsible for ensuring the role has the necessary permissions for any resources the module creates. See [Using an Existing IAM Role](#using-an-existing-iam-role) for details. | `string`      | `null`               |
 | tags                  | Resource tags                                                                                                                                                                     | `map(string)` | `{}`                 |
 
@@ -157,7 +158,10 @@ The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environme
 | dd_store_failed_events            | Store events that failed to reach Datadog (in S3, or in SQS when `dd_sqs_queue_url` is set) | `bool`   | `null`  |
 | dd_sqs_queue_url                  | SQS queue URL for failed event storage (v5 requires layer version >= 97; takes priority over S3 when set, auto-enables `dd_store_failed_events`) | `string` | `null`  |
 | dd_schedule_retry_failed_events   | Periodically retry failed events (via AWS EventBridge)   | `bool`   | `null`  |
-| dd_schedule_retry_interval        | Retry interval in hours for failed events                | `number` | `6`     |
+| dd_schedule_retry_interval        | Retry interval for scheduled forwarder invocation (via AWS EventBridge). Interpreted in hours pre-v6 and in minutes under v6. | `number` | `null`     |
+| failed_events_retention_in_days   | Days to retain failed-event objects in the forwarder's S3 bucket before they expire | `number` | `30`    |
+| async_max_retry_attempts          | Maximum Lambda asynchronous-invocation retry attempts (0-2) before an event is dropped or sent to `async_failure_destination` (v6 only) | `number` | `0`     |
+| async_failure_destination         | ARN of the SQS queue, SNS topic, Lambda function, or EventBridge bus to receive events once asynchronous retries are exhausted (v6 only) | `string` | `null`  |
 | dd_forwarder_bucket_name          | Custom S3 bucket name                                    | `string` | `null`  |
 | dd_forwarder_existing_bucket_name | Existing S3 bucket name                                  | `string` | `null`  |
 | dd_api_url                        | Custom API URL                                           | `string` | `null`  |

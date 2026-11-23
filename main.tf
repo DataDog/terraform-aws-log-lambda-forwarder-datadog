@@ -159,6 +159,19 @@ resource "aws_s3_bucket_lifecycle_configuration" "forwarder_bucket_lifecycle" {
       days_after_initiation = 7
     }
   }
+
+  rule {
+    id     = "expire-failed-events"
+    status = "Enabled"
+
+    filter {
+      prefix = "failed_events/"
+    }
+
+    expiration {
+      days = var.failed_events_retention_in_days
+    }
+  }
 }
 
 # S3 bucket policy
@@ -262,6 +275,16 @@ resource "aws_lambda_function" "forwarder" {
       )
       error_message = "Internal error: Secret ARN could not be determined. This is likely a module bug."
     }
+
+    precondition {
+      condition = !(
+        var.use_v6 &&
+        var.fips == true &&
+        !local.is_gov_partition &&
+        !contains(local.fips_eligible_regions, local.region)
+      )
+      error_message = "fips = true is only supported in ${join(", ", local.fips_eligible_regions)} for the commercial partition (current region: ${local.region}). Unset fips or deploy to a supported region."
+    }
   }
 }
 
@@ -272,7 +295,17 @@ resource "aws_lambda_function_event_invoke_config" "forwarder_invoke_config" {
 
   function_name = aws_lambda_function.forwarder.function_name
 
-  maximum_retry_attempts = 0
+  maximum_retry_attempts = var.async_max_retry_attempts
+
+  dynamic "destination_config" {
+    for_each = var.async_failure_destination != null ? [1] : []
+
+    content {
+      on_failure {
+        destination = var.async_failure_destination
+      }
+    }
+  }
 }
 
 # Lambda permissions
@@ -385,7 +418,7 @@ resource "aws_scheduler_schedule" "scheduled_retry" {
 
   name                = "${var.function_name}-${local.region}-retry"
   description         = "Retry the failed events from the Datadog Lambda Forwarder ${var.function_name}"
-  schedule_expression = "rate(${var.dd_schedule_retry_interval} hours)"
+  schedule_expression = "rate(${local.retry_interval_minutes} minutes)"
   flexible_time_window {
     mode = "OFF"
   }

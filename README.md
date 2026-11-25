@@ -69,6 +69,7 @@ The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environme
 - `dd_api_key` - The API key directly (will be stored in Secrets Manager)
 - `dd_api_key_secret_arn` - ARN of existing Secrets Manager secret containing the API key
 - `dd_api_key_ssm_parameter_name` - Name of SSM Parameter containing the API key
+- `dd_org_uuid` - Datadog organization UUID to authenticate via Workload Identity Federation
 
 ### AWS Configuration
 
@@ -92,7 +93,7 @@ The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environme
 | use_v6                | Deploy the v6 major version.                                                                                                                                                      | `bool`        | `false`              |
 | zip_bucket            | Name of the S3 bucket holding the forwarder artifact. Defaults to the Datadog-published bucket for `region`. Internal only.                      | `string`      | `null`               |
 | zip_version           | Version of the forwarder to deploy, or `latest` to track the most recent release.                                                                                                 | `string`      | `"latest"`           |
-| existing_iam_role_arn | ARN of existing IAM role to use for the Lambda function. When using an existing role, you must provide either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name`, and you are responsible for ensuring the role has the necessary permissions for any resources the module creates. See [Using an Existing IAM Role](#using-an-existing-iam-role) for details. | `string`      | `null`               |
+| existing_iam_role_arn | ARN of existing IAM role to use for the Lambda function. When using an existing role, you must also provide `dd_api_key_secret_arn`, `dd_api_key_ssm_parameter_name`, or `dd_org_uuid`, and you are responsible for ensuring the role has the necessary permissions for any resources the module creates. See [Using an Existing IAM Role](#using-an-existing-iam-role) for details. | `string`      | `null`               |
 | tags                  | Resource tags                                                                                                                                                                     | `map(string)` | `{}`                 |
 
 ### Datadog Configuration
@@ -102,6 +103,8 @@ The extension reads the existing `DD_SITE` and `DD_API_KEY_SECRET_ARN` environme
 | dd_api_key                    | Datadog API key                  | `string` | `null`            |
 | dd_api_key_secret_arn         | ARN of secret storing API key    | `string` | `null`            |
 | dd_api_key_ssm_parameter_name | SSM parameter name for API key   | `string` | `null`            |
+| dd_org_uuid                   | Datadog organization UUID        | `string` | `null`            |
+| dd_delegated_auth_refresh_interval_mins | Minutes between delegated-auth API key refreshes (only used with dd_org_uuid) | `number` | `null`            |
 | dd_site                       | Datadog site                     | `string` | `"datadoghq.com"` |
 | dd_tags                       | Custom tags for forwarded logs   | `string` | `null`            |
 | dd_source                     | Custom source for forwarded logs | `string` | `null`            |
@@ -290,7 +293,7 @@ module "datadog_forwarder" {
 
 When using `existing_iam_role_arn`, you are responsible for ensuring your IAM role has the necessary permissions for all resources the module creates or uses:
 
-- **API Key Access**: You must provide either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name` (the module cannot grant your existing role access to a newly created secret)
+- **API Key Access**: You must provide `dd_api_key_secret_arn`, `dd_api_key_ssm_parameter_name`, or `dd_org_uuid` (the module cannot grant your existing role access to a newly created secret; `dd_org_uuid` needs no secret access at all)
 - **S3 Bucket**: If the module creates an S3 bucket (for tag caching with `dd_fetch_lambda_tags` or failed events with `dd_store_failed_events`), your role needs read/write access. Use the `forwarder_bucket_arn` output to configure your IAM policy.
 - **CloudWatch Logs**: Your role needs permissions to write to CloudWatch Logs. Use the `forwarder_log_group_arn` output to configure your IAM policy. If the log group is encrypted with a KMS key, you will also need encrypt/decrypt permissions for that key.
 - **Other Permissions**: Depending on your configuration, your role may need additional permissions (KMS decrypt, Resource Groups for tag fetching, VPC network interfaces, etc.)
@@ -366,7 +369,7 @@ module "datadog_forwarder" {
 
 **Requirements when using `existing_iam_role_arn`:**
 
-- Must specify either `dd_api_key_secret_arn` or `dd_api_key_ssm_parameter_name` (the module cannot grant your existing role access to a newly created secret)
+- Must specify `dd_api_key_secret_arn`, `dd_api_key_ssm_parameter_name`, or `dd_org_uuid` (the module cannot grant your existing role access to a newly created secret; `dd_org_uuid` needs no secret access at all)
 - Your IAM role must have appropriate permissions for resources in each target region
 - Secrets/parameters containing the Datadog API key should exist in each target region
 

@@ -1,7 +1,3 @@
-# Tests for dd_org_uuid (Workload Identity Federation / delegated auth).
-#
-# All tests here use mock_provider + override_data so they run without real AWS credentials.
-
 mock_provider "aws" {
   mock_data "aws_caller_identity" {
     defaults = {

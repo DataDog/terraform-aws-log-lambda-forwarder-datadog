@@ -76,6 +76,7 @@ locals {
   # API Key Secret Management - detect usage patterns
   is_using_auto_secret_creation = var.dd_api_key != null && var.dd_api_key_secret_arn == null && var.dd_api_key_ssm_parameter_name == null
   has_external_secret_reference = var.dd_api_key_secret_arn != null || var.dd_api_key_ssm_parameter_name != null
+  has_org_uuid                  = var.dd_org_uuid != null
 
   # Determine whether to create secret - respects explicit flag or falls back to automatic detection
   should_create_secret = var.create_dd_api_key_secret != null ? var.create_dd_api_key_secret : local.is_using_auto_secret_creation
@@ -101,31 +102,33 @@ locals {
       DD_API_KEY_SECRET_ARN = local.effective_secret_arn
     },
     {
-      DD_SITE                         = var.dd_site
-      DD_S3_BUCKET_NAME               = local.dd_s3_bucket_name
-      DD_SOURCE                       = var.dd_source
-      DD_TAGS                         = var.dd_tags
-      DD_NO_SSL                       = var.dd_no_ssl
-      DD_URL                          = var.dd_url
-      DD_PORT                         = var.dd_port
-      DD_SQS_QUEUE_URL                = var.dd_sqs_queue_url
-      DD_STORE_FAILED_EVENTS          = local.store_failed_events_enabled ? "true" : null
-      DD_SKIP_SSL_VALIDATION          = var.dd_skip_ssl_validation != null ? tostring(var.dd_skip_ssl_validation) : null
-      DD_COMPRESSION_LEVEL            = var.dd_compression_level
-      DD_SCRUBBING_RULE               = var.dd_scrubbing_rule
-      DD_SCRUBBING_RULE_REPLACEMENT   = var.dd_scrubbing_rule_replacement
-      REDACT_IP                       = var.redact_ip != null ? tostring(var.redact_ip) : null
-      REDACT_EMAIL                    = var.redact_email != null ? tostring(var.redact_email) : null
-      EXCLUDE_AT_MATCH                = var.exclude_at_match
-      INCLUDE_AT_MATCH                = var.include_at_match
-      DD_MULTILINE_LOG_REGEX_PATTERN  = var.dd_multiline_log_regex_pattern
-      DD_STEP_FUNCTIONS_TRACE_ENABLED = var.dd_step_functions_trace_enabled != null ? tostring(var.dd_step_functions_trace_enabled) : null
-      DD_ADDITIONAL_TARGET_LAMBDAS    = var.additional_target_lambda_arns
-      DD_API_URL                      = var.dd_api_url
-      DD_LOG_LEVEL                    = var.dd_log_level
-      HTTP_PROXY                      = var.dd_http_proxy_url
-      HTTPS_PROXY                     = var.dd_http_proxy_url
-      NO_PROXY                        = var.dd_no_proxy
+      DD_ORG_UUID                             = var.dd_org_uuid
+      DD_DELEGATED_AUTH_REFRESH_INTERVAL_MINS = var.dd_delegated_auth_refresh_interval_mins != null ? tostring(var.dd_delegated_auth_refresh_interval_mins) : null
+      DD_SITE                                 = var.dd_site
+      DD_S3_BUCKET_NAME                       = local.dd_s3_bucket_name
+      DD_SOURCE                               = var.dd_source
+      DD_TAGS                                 = var.dd_tags
+      DD_NO_SSL                               = var.dd_no_ssl
+      DD_URL                                  = var.dd_url
+      DD_PORT                                 = var.dd_port
+      DD_SQS_QUEUE_URL                        = var.dd_sqs_queue_url
+      DD_STORE_FAILED_EVENTS                  = local.store_failed_events_enabled ? "true" : null
+      DD_SKIP_SSL_VALIDATION                  = var.dd_skip_ssl_validation != null ? tostring(var.dd_skip_ssl_validation) : null
+      DD_COMPRESSION_LEVEL                    = var.dd_compression_level
+      DD_SCRUBBING_RULE                       = var.dd_scrubbing_rule
+      DD_SCRUBBING_RULE_REPLACEMENT           = var.dd_scrubbing_rule_replacement
+      REDACT_IP                               = var.redact_ip != null ? tostring(var.redact_ip) : null
+      REDACT_EMAIL                            = var.redact_email != null ? tostring(var.redact_email) : null
+      EXCLUDE_AT_MATCH                        = var.exclude_at_match
+      INCLUDE_AT_MATCH                        = var.include_at_match
+      DD_MULTILINE_LOG_REGEX_PATTERN          = var.dd_multiline_log_regex_pattern
+      DD_STEP_FUNCTIONS_TRACE_ENABLED         = var.dd_step_functions_trace_enabled != null ? tostring(var.dd_step_functions_trace_enabled) : null
+      DD_ADDITIONAL_TARGET_LAMBDAS            = var.additional_target_lambda_arns
+      DD_API_URL                              = var.dd_api_url
+      DD_LOG_LEVEL                            = var.dd_log_level
+      HTTP_PROXY                              = var.dd_http_proxy_url
+      HTTPS_PROXY                             = var.dd_http_proxy_url
+      NO_PROXY                                = var.dd_no_proxy
     }
   )
 

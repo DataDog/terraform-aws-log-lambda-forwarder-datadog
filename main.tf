@@ -241,7 +241,7 @@ resource "aws_lambda_function" "forwarder" {
 
   lifecycle {
     precondition {
-      condition     = local.has_external_secret_reference || local.is_using_auto_secret_creation
+      condition     = local.has_external_secret_reference || local.is_using_auto_secret_creation || local.has_org_uuid
       error_message = <<-EOT
         Lambda function requires Datadog API key configuration.
 
@@ -249,6 +249,7 @@ resource "aws_lambda_function" "forwarder" {
         - dd_api_key (module will create secret automatically)
         - dd_api_key_secret_arn (reference to existing Secrets Manager secret)
         - dd_api_key_ssm_parameter_name (reference to existing SSM parameter)
+        - dd_org_uuid (authenticate via Workload Identity Federation, no API key needed)
 
         If you are creating a secret or parameter in the same Terraform plan,
         set create_dd_api_key_secret = false.
@@ -258,7 +259,8 @@ resource "aws_lambda_function" "forwarder" {
     precondition {
       condition = (
         var.dd_api_key_ssm_parameter_name != null ||
-        local.effective_secret_arn != null
+        local.effective_secret_arn != null ||
+        local.has_org_uuid
       )
       error_message = "Internal error: Secret ARN could not be determined. This is likely a module bug."
     }

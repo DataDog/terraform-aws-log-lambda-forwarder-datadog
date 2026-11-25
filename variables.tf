@@ -93,8 +93,35 @@ variable "create_dd_api_key_secret" {
   }
 
   validation {
-    condition     = var.create_dd_api_key_secret != false || (var.dd_api_key_secret_arn != null || var.dd_api_key_ssm_parameter_name != null)
-    error_message = "When create_dd_api_key_secret is false, either dd_api_key_secret_arn or dd_api_key_ssm_parameter_name must be provided."
+    condition     = var.create_dd_api_key_secret != false || (var.dd_api_key_secret_arn != null || var.dd_api_key_ssm_parameter_name != null || var.dd_org_uuid != null)
+    error_message = "When create_dd_api_key_secret is false, either dd_api_key_secret_arn, dd_api_key_ssm_parameter_name, or dd_org_uuid must be provided."
+  }
+}
+
+variable "dd_org_uuid" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    Datadog organization UUID. Authenticates via Workload Identity Federation instead of
+    an API key, exchanging the execution role's credentials for one. Requires an
+    AWS intake mapping in Datadog authorizing "arn:aws:sts::<account-id>:assumed-role/<role-name>/*"
+    (see datadog_forwarder_role_name output).
+  EOT
+
+  validation {
+    condition     = var.dd_org_uuid == null || can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.dd_org_uuid))
+    error_message = "dd_org_uuid must be a valid UUID."
+  }
+}
+
+variable "dd_delegated_auth_refresh_interval_mins" {
+  type        = number
+  default     = null
+  description = "Minutes between API key refreshes when dd_org_uuid is set."
+
+  validation {
+    condition     = var.dd_delegated_auth_refresh_interval_mins == null || var.dd_delegated_auth_refresh_interval_mins > 0
+    error_message = "dd_delegated_auth_refresh_interval_mins must be a positive number."
   }
 }
 
@@ -146,9 +173,9 @@ variable "existing_iam_role_arn" {
 
   validation {
     condition = var.existing_iam_role_arn == null || (
-      var.dd_api_key_ssm_parameter_name != null || var.dd_api_key_secret_arn != null
+      var.dd_api_key_ssm_parameter_name != null || var.dd_api_key_secret_arn != null || var.dd_org_uuid != null
     )
-    error_message = "When using existing_iam_role_arn, you must also specify either dd_api_key_ssm_parameter_name or dd_api_key_secret_arn, since the module cannot grant your existing role access to a newly created secret."
+    error_message = "When using existing_iam_role_arn, you must also specify dd_api_key_ssm_parameter_name, dd_api_key_secret_arn, or dd_org_uuid, since the module cannot grant your existing role access to a newly created secret."
   }
 }
 
